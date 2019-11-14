@@ -1,19 +1,14 @@
 --[[
-    Template PvP Mission Script - Version: 1.05 - 14/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.06 - 14/11/2019 by Theodossis Papadopoulos 
        ]]
-
--- ************************************************************************
--- *********************  USER CONFIGURATION ******************************
--- ************************************************************************
--- CAUTION CAUTION: NEVER NAME A UNIT NAME (NOT A GROUP NAME) BY A STANDAR NUMBER LIKE 1, 2... JUST LET THE UNITS NAMED UNIT #001 ETC...
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
 local RED_OPERATIONS = _G["RED_OPERATIONS"]
 local GROUPS_RED = _G["GROUPS_RED"]
 local randomGroups = _G["randomGroups"]
 
-local msgTimer = _G["msgTimer"]				   -- We specify the time that the target's asignment message will remain visible. The current target's message can be always recall via the F10 menu by selecting Target Report option. 
-local blueWinMsg = _G["blueWinMsg"]     -- Here we can Specify the Blue and Red Win messages.
+local msgTimer = _G["msgTimer"]
+local blueWinMsg = _G["blueWinMsg"]
 local redWinMsg = _G["redWinMsg"]
 
 local aircraftCost = _G["aircraftCost"]
@@ -25,7 +20,7 @@ local unitCost = _G["unitCost"]
 local GROUPS_BLUE_DONE = {}
 local GROUPS_RED_DONE = {}
 
--- -----------------------MISC METHODS (DO NOT MODIFY) ------------------------------------
+-- ----------------------- MISC METHODS CODE ------------------------------------
 function tablelength(T)
   local count = 0
   for _ in pairs(T) do count = count + 1 end
@@ -40,9 +35,9 @@ function contains(tab, val)
     end
     return false
 end
--- ----------------------BLUE METHODS (DO NOT MODIFY)------------------------------------
-local currentBlueTarget = 1      -- It shows the Blue Team's current target's number 
-local currentBlueGroupTarget = 0 -- It shows the Blue Team's current groups's number
+-- ---------------------- BLUE METHODS CODE ------------------------------------
+local currentBlueTarget = 0
+local currentBlueGroupTarget = 0
 local bluePoints = 0
 local blueACCasualties = 0
 local blueHeliCasualties = 0
@@ -120,9 +115,9 @@ function activateNextTargetBlue()
   end
   printDataBlue()
 end
--- ------------------ RED METHODS (DO NOT MODIFY) -------------------------------
-local currentRedTarget = 1      -- It shows the Red Team's current target's number 
-local currentRedGroupTarget = 0 -- It shows the Blue Team's current group's number
+-- ------------------ RED METHODS CODE -------------------------------
+local currentRedTarget = 0
+local currentRedGroupTarget = 0
 local redPoints = 0
 local redACCasualties = 0
 local redHeliCasualties = 0
@@ -204,7 +199,8 @@ function activateNextTargetRed()
   end
   printDataRed()
 end
--- -----------------------------------(DO NOT MODIFY) ------------------------------------
+
+-- ----------------------------------- EVENT CODE ------------------------------------
 function groupIsDead(inGroupName)
   local groupHealth = 0
   local groupDead = false
@@ -221,6 +217,9 @@ GROUP_DEAD = {}
 function GROUP_DEAD:onEvent(event)
   if(event.id == world.event.S_EVENT_DEAD) then
     local who = event.initiator
+    -- ----------------------------------------------------------------------------- --
+    --                               TARGET IS UNIT                                  --
+    -- ----------------------------------------------------------------------------- --
     if who:getCategory() == Object.Category.UNIT then
       if who:getCoalition() == coalition.side.RED then
         local _grp = Unit.getGroup(who)
@@ -263,6 +262,9 @@ function GROUP_DEAD:onEvent(event)
           end
         end
       end
+    -- ----------------------------------------------------------------------------- --
+    --                               TARGET IS MAP OBJECT                            --
+    -- ----------------------------------------------------------------------------- --
     elseif who:getCategory() == Object.Category.SCENERY then
       if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, true) then
         local totalNames = tablelength(getCurrentOperationGroupNameBlue())
