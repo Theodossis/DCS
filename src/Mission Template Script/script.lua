@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.06 - 14/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.07 - 15/11/2019 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -356,6 +356,51 @@ function printPoints()
 end
 
 mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, 300)
+
+-- -----------------------------MISSION RESCUER-----------------------------------------
+-- Sometimes map objs get destroyed but don't call Unit dead event.
+-- Happens mostly when a lot of bombs are dropped around the map object, reducing its life
+-- That causes problems, while next target is not activated
+-- The next part of code checks every 3 mins for destroyed targets like that
+function missionRescue()
+  if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, true) then
+    local totalNames = tablelength(getCurrentOperationGroupNameBlue())
+    for i=1, totalNames do
+      if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == true then
+        if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameBlue()[i]})) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
+          BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
+        end
+      end
+    end
+    if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
+      blueDoneOperation(currentBlueGroupTarget)
+      if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
+        trigger.action.outText(blueWinMsg, msgTimer)
+      else
+        activateNextTargetBlue()
+      end
+    end
+  end
+  if contains(RED_OPERATIONS[currentRedTarget].isMapObj, true) then
+    local totalNames = tablelength(getCurrentOperationGroupNameRed())
+    for i=1, totalNames do
+      if RED_OPERATIONS[currentRedTarget].isMapObj[i] == true then
+        if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameRed()[i]})) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
+          RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
+        end
+      end
+    end
+    if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
+      redDoneOperation(currentRedGroupTarget)
+      if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
+        trigger.action.outText(redWinMsg, msgTimer)
+      else
+        activateNextTargetRed()
+      end
+    end
+  end
+end
+mist.scheduleFunction(missionRescue, nil, timer.getTime() + 10, 180)
 
 missionCommands.addCommandForCoalition(coalition.side.BLUE, 'Target report', nil, printDataBlue, nil)
 missionCommands.addCommandForCoalition(coalition.side.RED, 'Target report', nil, printDataRed, nil)
