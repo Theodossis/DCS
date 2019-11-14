@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.03 - 13/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.05 - 14/11/2019 by Theodossis Papadopoulos 
        ]]
 
 -- ************************************************************************
