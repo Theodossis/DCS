@@ -1,12 +1,13 @@
 -- Mission Template Script already contains it
+-- Requires MIST script
 
 -- ------------------POINT COSTS FOR OBJECTS------------------
 local aircraftCost = 1
 local heliCost = 0.5
 local shipCost = 5
 local unitCost = 0.3
-local printScoreEvery = 300 -- How much time between its cycle to show message
-local printScoreFor = 30 -- How much time will the message show up
+local printScoreEvery = 300 -- How much time between its cycle to show message (in seconds)
+local printScoreFor = 30 -- How much time will the message show up (in seconds)
 
 -- ------------------CODE DO NOT TOUCH ------------------
 local blueACCasualties = 0
