@@ -1,2 +1,2 @@
++ Ability to skip targets
 + Cover missions that all targets are already enabled at the mission start
-+ Compatibility with polygone zones

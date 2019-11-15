@@ -53,7 +53,7 @@ BLUE_OPERATIONS[4] = {
   
 RED_OPERATIONS[1] = {
   Name = {'RT_1A', 'RT_1B'},
-  isMapObj = {false, true},
+  isMapObj = {false, "polygon"},
   showMark = {false, true},
   Briefing = "RED TARGET 1",
   Extras = {},
