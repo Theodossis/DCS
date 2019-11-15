@@ -1,5 +1,14 @@
 -- Mission Template Script already contains it
 
+-- ------------------POINT COSTS FOR OBJECTS------------------
+local aircraftCost = 1
+local heliCost = 0.5
+local shipCost = 5
+local unitCost = 0.3
+local printScoreEvery = 300 -- How much time between its cycle to show message
+local printScoreFor = 30 -- How much time will the message show up
+
+-- ------------------CODE DO NOT TOUCH ------------------
 local blueACCasualties = 0
 local blueHeliCasualties = 0
 local blueShipCasualties = 0
@@ -50,12 +59,12 @@ end
 world.addEventHandler(POINT_SYSTEM)
 -- -----------------------------SCORE PRINTER----------------------------------------
 function printPoints()
-  local totalPointsForBlue = bluePoints + redACCasualties*aircraftCost + redHeliCasualties*heliCost + redShipCasualties*shipCost + redGroundUnitCasualties*unitCost
-  local totalPointsForRed = redPoints + blueACCasualties*aircraftCost + blueHeliCasualties*heliCost + blueShipCasualties*shipCost + blueGroundUnitCasualties*unitCost
-  trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , 30)
-  trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, 30)
-  trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties, 30)  
-  trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties, 30)  
+  local totalPointsForBlue = redACCasualties*aircraftCost + redHeliCasualties*heliCost + redShipCasualties*shipCost + redGroundUnitCasualties*unitCost
+  local totalPointsForRed = blueACCasualties*aircraftCost + blueHeliCasualties*heliCost + blueShipCasualties*shipCost + blueGroundUnitCasualties*unitCost
+  trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , printScoreFor)
+  trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, printScoreFor)
+  trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties, printScoreFor)  
+  trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties, printScoreFor)  
 end
 
-mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, 300)
+mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, printScoreEvery)
