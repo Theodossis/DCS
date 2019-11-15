@@ -15,6 +15,8 @@ local aircraftCost = _G["aircraftCost"]
 local heliCost = _G["heliCost"]
 local shipCost = _G["shipCost"]
 local unitCost = _G["unitCost"]
+local printScoreEvery = _G["printScoreEvery"] -- How much time between its cycle to show message
+local printScoreFor = _G["printScoreFor"] -- How much time will the message show up
 
 -- ------------------INIT VARIABLES (DO NOT MODIFY) ----------------------
 local GROUPS_BLUE_DONE = {}
@@ -349,13 +351,13 @@ world.addEventHandler(POINT_SYSTEM)
 function printPoints()
   local totalPointsForBlue = bluePoints + redACCasualties*aircraftCost + redHeliCasualties*heliCost + redShipCasualties*shipCost + redGroundUnitCasualties*unitCost
   local totalPointsForRed = redPoints + blueACCasualties*aircraftCost + blueHeliCasualties*heliCost + blueShipCasualties*shipCost + blueGroundUnitCasualties*unitCost
-  trigger.action.outText('###  TEAM SCORES ###  Created by =GR= Theodossis for LoG' , 30)
-  trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, 30)
-  trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. bluePoints, 30)  
-  trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. redPoints, 30)  
+  trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , printScoreFor)
+  trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, printScoreFor)
+  trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. bluePoints, printScoreFor)  
+  trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. redPoints, printScoreFor)  
 end
 
-mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, 300)
+mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, printScoreEvery)
 
 -- -----------------------------MISSION RESCUER-----------------------------------------
 -- Sometimes map objs get destroyed but don't call Unit dead event.

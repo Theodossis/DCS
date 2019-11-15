@@ -11,8 +11,10 @@ redWinMsg = 'RED WON'
 -- ------------------POINT COSTS FOR OBJECTS------------------
 aircraftCost = 1
 heliCost = 0.5
-shipCost = 10
+shipCost = 5
 unitCost = 0.3
+printScoreEvery = 300 -- How much time between its cycle to show message (in seconds)
+printScoreFor = 30 -- How much time will the message show up (in seconds)
   
 BLUE_OPERATIONS[1] = {
   Name = {'BT_1'},
