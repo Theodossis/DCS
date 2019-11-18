@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.08 - 15/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.09 - 18/11/2019 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -15,8 +15,8 @@ local aircraftCost = _G["aircraftCost"]
 local heliCost = _G["heliCost"]
 local shipCost = _G["shipCost"]
 local unitCost = _G["unitCost"]
-local printScoreEvery = _G["printScoreEvery"] -- How much time between its cycle to show message
-local printScoreFor = _G["printScoreFor"] -- How much time will the message show up
+local printScoreEvery = _G["printScoreEvery"]
+local printScoreFor = _G["printScoreFor"]
 
 -- ------------------INIT VARIABLES (DO NOT MODIFY) ----------------------
 local GROUPS_BLUE_DONE = {}
@@ -227,64 +227,18 @@ function groupIsDead(inGroupName)
   return groupDead
 end
 
-GROUP_DEAD = {}
-function GROUP_DEAD:onEvent(event)
-  if(event.id == world.event.S_EVENT_DEAD) then
-    local who = event.initiator
-    -- ----------------------------------------------------------------------------- --
-    --                               TARGET IS UNIT                                  --
-    -- ----------------------------------------------------------------------------- --
-    if who:getCategory() == Object.Category.UNIT then
-      if who:getCoalition() == coalition.side.RED then
-        local _grp = Unit.getGroup(who)
-        if(contains(getCurrentOperationGroupNameBlue(), _grp:getName())) and (groupIsDead(_grp:getName())) then
-          local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-          for i=1, totalNames do
-            if isCurrentOperationMapObjBlue()[i] == false then
-              if groupIsDead(getCurrentOperationGroupNameBlue()[i]) and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-                BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
-              end
-            end
-          end
-          if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-            blueDoneOperation(currentBlueGroupTarget)
-            if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-              trigger.action.outText(blueWinMsg, msgTimer)
-            else
-             activateNextTargetBlue()
-            end
-          end
-        end
-      elseif who:getCoalition() == coalition.side.BLUE then
-        local _grp = Unit.getGroup(who)
-        if(contains(getCurrentOperationGroupNameRed(), _grp:getName())) and (groupIsDead(_grp:getName())) then
-          local totalNames = tablelength(getCurrentOperationGroupNameRed())
-          for i=1, totalNames do
-            if isCurrentOperationMapObjRed()[i] == false then
-              if groupIsDead(getCurrentOperationGroupNameRed()[i]) and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-                RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
-              end
-            end
-          end
-          if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-            redDoneOperation(currentRedGroupTarget)
-            if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-              trigger.action.outText(redWinMsg, msgTimer)
-            else
-              activateNextTargetRed()
-            end
-          end
-        end
-      end
-    -- ----------------------------------------------------------------------------- --
-    --                               TARGET IS MAP OBJECT                            --
-    -- ----------------------------------------------------------------------------- --
-    elseif who:getCategory() == Object.Category.SCENERY then
-      if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, true) then
+function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS NEEDED, GROUP OPTIONAL 
+  -- ----------------------------------------------------------------------------- --
+  --                               TARGET IS UNIT                                  --
+  -- ----------------------------------------------------------------------------- --
+  if category == Object.Category.UNIT then
+    if who:getCoalition() == coalition.side.RED then
+      local _grp = Unit.getGroup(who)
+      if(contains(getCurrentOperationGroupNameBlue(), _grp:getName())) and (groupIsDead(_grp:getName())) then
         local totalNames = tablelength(getCurrentOperationGroupNameBlue())
         for i=1, totalNames do
-          if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == true then
-            if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameBlue()[i]})) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
+          if isCurrentOperationMapObjBlue()[i] == false then
+            if groupIsDead(getCurrentOperationGroupNameBlue()[i]) and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
               BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
             end
           end
@@ -294,52 +248,17 @@ function GROUP_DEAD:onEvent(event)
           if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
             trigger.action.outText(blueWinMsg, msgTimer)
           else
-            activateNextTargetBlue()
+           activateNextTargetBlue()
           end
         end
       end
-      if contains(RED_OPERATIONS[currentRedTarget].isMapObj, true) then
+    elseif who:getCoalition() == coalition.side.BLUE then
+      local _grp = Unit.getGroup(who)
+      if(contains(getCurrentOperationGroupNameRed(), _grp:getName())) and (groupIsDead(_grp:getName())) then
         local totalNames = tablelength(getCurrentOperationGroupNameRed())
         for i=1, totalNames do
-          if RED_OPERATIONS[currentRedTarget].isMapObj[i] == true then
-            if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameRed()[i]})) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-              RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
-            end
-          end
-        end
-        if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-          redDoneOperation(currentRedGroupTarget)
-          if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-            trigger.action.outText(redWinMsg, msgTimer)
-          else
-            activateNextTargetRed()
-          end
-        end
-      end
-      -- ---------------------------IN CASE THE TARGET IS IN POLY ZONE -------------------------------------------
-      if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, "polygon") then
-        local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-        for i=1, totalNames do
-          if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == "polygon" then
-            if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameBlue()[i]))) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-              BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
-            end
-          end
-        end
-        if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-          blueDoneOperation(currentBlueGroupTarget)
-          if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-            trigger.action.outText(blueWinMsg, msgTimer)
-          else
-            activateNextTargetBlue()
-          end
-        end
-      end
-      if contains(RED_OPERATIONS[currentRedTarget].isMapObj, "polygon") then
-        local totalNames = tablelength(getCurrentOperationGroupNameRed())
-        for i=1, totalNames do
-          if RED_OPERATIONS[currentRedTarget].isMapObj[i] == "polygon" then
-            if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameRed()[i]))) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
+          if isCurrentOperationMapObjRed()[i] == false then
+            if groupIsDead(getCurrentOperationGroupNameRed()[i]) and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
               RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
             end
           end
@@ -354,6 +273,91 @@ function GROUP_DEAD:onEvent(event)
         end
       end
     end
+  -- ----------------------------------------------------------------------------- --
+  --                               TARGET IS MAP OBJECT                            --
+  -- ----------------------------------------------------------------------------- --
+  elseif category == Object.Category.SCENERY then
+    if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, true) then
+      local totalNames = tablelength(getCurrentOperationGroupNameBlue())
+      for i=1, totalNames do
+        if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == true then
+          if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameBlue()[i]})) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
+            BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
+          end
+        end
+      end
+      if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
+        blueDoneOperation(currentBlueGroupTarget)
+        if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
+          trigger.action.outText(blueWinMsg, msgTimer)
+        else
+          activateNextTargetBlue()
+        end
+      end
+    end
+    if contains(RED_OPERATIONS[currentRedTarget].isMapObj, true) then
+      local totalNames = tablelength(getCurrentOperationGroupNameRed())
+      for i=1, totalNames do
+        if RED_OPERATIONS[currentRedTarget].isMapObj[i] == true then
+          if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameRed()[i]})) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
+            RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
+          end
+        end
+      end
+      if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
+        redDoneOperation(currentRedGroupTarget)
+        if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
+          trigger.action.outText(redWinMsg, msgTimer)
+        else
+          activateNextTargetRed()
+        end
+      end
+    end
+    -- ---------------------------IN CASE THE TARGET IS IN POLY ZONE -------------------------------------------
+    if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, "polygon") then
+     local totalNames = tablelength(getCurrentOperationGroupNameBlue())
+      for i=1, totalNames do
+        if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == "polygon" then
+          if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameBlue()[i]))) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
+            BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
+          end
+        end
+      end
+      if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
+        blueDoneOperation(currentBlueGroupTarget)
+        if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
+          trigger.action.outText(blueWinMsg, msgTimer)
+        else
+          activateNextTargetBlue()
+        end
+      end
+    end
+    if contains(RED_OPERATIONS[currentRedTarget].isMapObj, "polygon") then
+      local totalNames = tablelength(getCurrentOperationGroupNameRed())
+      for i=1, totalNames do
+        if RED_OPERATIONS[currentRedTarget].isMapObj[i] == "polygon" then
+          if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameRed()[i]))) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
+            RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
+          end
+        end
+      end
+      if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
+        redDoneOperation(currentRedGroupTarget)
+        if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
+          trigger.action.outText(redWinMsg, msgTimer)
+        else
+          activateNextTargetRed()
+        end
+      end
+    end
+  end
+end
+
+GROUP_DEAD = {}
+function GROUP_DEAD:onEvent(event)
+  if(event.id == world.event.S_EVENT_DEAD) then
+    local who = event.initiator
+    detectAndActivateNext(who:getCategory(), who)
   end
 end
 world.addEventHandler(GROUP_DEAD)
@@ -414,78 +418,7 @@ mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, printScoreEvery)
 -- That causes problems, while next target is not activated
 -- The next part of code checks every 3 mins for destroyed targets like that
 function missionRescue()
-  if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, true) then
-    local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-    for i=1, totalNames do
-      if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == true then
-        if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameBlue()[i]})) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-          BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
-        end
-      end
-    end
-    if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-      blueDoneOperation(currentBlueGroupTarget)
-      if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-        trigger.action.outText(blueWinMsg, msgTimer)
-      else
-        activateNextTargetBlue()
-      end
-    end
-  end
-  if contains(RED_OPERATIONS[currentRedTarget].isMapObj, true) then
-    local totalNames = tablelength(getCurrentOperationGroupNameRed())
-    for i=1, totalNames do
-      if RED_OPERATIONS[currentRedTarget].isMapObj[i] == true then
-        if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameRed()[i]})) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-          RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
-        end
-      end
-    end
-    if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-      redDoneOperation(currentRedGroupTarget)
-      if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-        trigger.action.outText(redWinMsg, msgTimer)
-      else
-        activateNextTargetRed()
-      end
-    end
-  end
-  if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, "polygon") then
-    local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-    for i=1, totalNames do
-      if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == "polygon" then
-        if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameBlue()[i]))) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-          BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
-        end
-      end
-    end
-    if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-      blueDoneOperation(currentBlueGroupTarget)
-      if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-        trigger.action.outText(blueWinMsg, msgTimer)
-      else
-        activateNextTargetBlue()
-      end
-    end
-  end
-  if contains(RED_OPERATIONS[currentRedTarget].isMapObj, "polygon") then
-    local totalNames = tablelength(getCurrentOperationGroupNameRed())
-    for i=1, totalNames do
-      if RED_OPERATIONS[currentRedTarget].isMapObj[i] == "polygon" then
-        if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameRed()[i]))) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-          RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
-        end
-      end
-    end
-    if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-      redDoneOperation(currentRedGroupTarget)
-      if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-        trigger.action.outText(redWinMsg, msgTimer)
-      else
-        activateNextTargetRed()
-      end
-    end
-  end
+  detectAndActivateNext(Object.Category.SCENERY, nil)
 end
 mist.scheduleFunction(missionRescue, nil, timer.getTime() + 10, 180)
 
