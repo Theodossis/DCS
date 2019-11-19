@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.09 - 18/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.10 - 19/11/2019 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -38,8 +38,8 @@ function contains(tab, val)
     return false
 end
 -- ---------------------- BLUE METHODS CODE ------------------------------------
-local currentBlueTarget = 0
-local currentBlueGroupTarget = 0
+local currentBlueTarget = {}
+local currentBlueGroupTarget = {}
 local bluePoints = 0
 local blueACCasualties = 0
 local blueHeliCasualties = 0
@@ -48,84 +48,110 @@ local blueGroundUnitCasualties = 0
 local markCounterBlue = 1000
 local markUsingBlue = {}
 
-function getCurrentOperationGroupNameBlue()
-  return BLUE_OPERATIONS[currentBlueTarget].Name
+function getCurrentOperationGroupNameBlue(i)
+  return BLUE_OPERATIONS[currentBlueTarget[i]].Name
 end
 
-function isCurrentOperationMapObjBlue()
-  return BLUE_OPERATIONS[currentBlueTarget].isMapObj
+function isCurrentOperationMapObjBlue(i)
+  return BLUE_OPERATIONS[currentBlueTarget[i]].isMapObj
 end
 
-function getCurrentOperationBriefingBlue()
-  return BLUE_OPERATIONS[currentBlueTarget].Briefing
+function getCurrentOperationBriefingBlue(i)
+  return BLUE_OPERATIONS[currentBlueTarget[i]].Briefing
 end
 
-function getCurrentOperationExtrasBlue()
-  return BLUE_OPERATIONS[currentBlueTarget].Extras
+function getCurrentOperationExtrasBlue(i)
+  return BLUE_OPERATIONS[currentBlueTarget[i]].Extras
 end
 
 function blueDoneOperation(id)
-  bluePoints = bluePoints + BLUE_OPERATIONS[currentBlueTarget].Points
+  bluePoints = bluePoints + BLUE_OPERATIONS[currentBlueTarget[id]].Points
   for i=1, tablelength(markUsingBlue) do
     trigger.action.removeMark(markUsingBlue[i])
   end
-  GROUPS_BLUE_DONE[tablelength(GROUPS_BLUE_DONE) + 1] = id
+  GROUPS_BLUE_DONE[tablelength(GROUPS_BLUE_DONE) + 1] = currentBlueGroupTarget[id]
+  table.remove(currentBlueTarget, id)
+  table.remove(currentBlueGroupTarget, id)
 end
 
-function printDataBlue()
-  trigger.action.outTextForCoalition(coalition.side.BLUE, 'Target Report: \n' .. getCurrentOperationBriefingBlue(), msgTimer)
+function printDataBlue(lastOnly) -- lastOnly boolean that only shows the last activated group briefing
+  if lastOnly == false then
+    local finalStr = "Target Report: \n"
+    for i=1, tablelength(currentBlueTarget) do
+      finalStr = finalStr .. currentBlueGroupTarget[i] .. "#: " .. getCurrentOperationBriefingBlue(i) .. "\n"
+    end
+    trigger.action.outTextForCoalition(coalition.side.BLUE, finalStr, msgTimer)
+  else
+    trigger.action.outTextForCoalition(coalition.side.BLUE, 'Target Report: \n' .. getCurrentOperationBriefingBlue(tablelength(currentBlueTarget)), msgTimer)
+  end
 end
 
 function soundBlueThatIsOurTarget()
   trigger.action.outSoundForCoalition(coalition.side.BLUE, "That Is Our Target.ogg")
 end
 
+function activateMoreBlue(showMsg)
+  if tablelength(GROUPS_BLUE) - (tablelength(GROUPS_BLUE_DONE) + tablelength(currentBlueGroupTarget)) == 0 then
+    if showMsg == true then
+      trigger.action.outTextForCoalition(coalition.side.BLUE, "There are not any more targets left to activate! Destroy the remaining targets to win!", 15)
+    end
+  else
+    activateNextTargetBlue()
+  end
+end
+
 function activateNextTargetBlue()
   trigger.action.outSoundForCoalition(coalition.side.BLUE, 'tele.ogg')
   timer.scheduleFunction(soundBlueThatIsOurTarget, nil, timer.getTime() + 6)
+  local latestGroup = 1
   if randomGroups == true then
     local _random = math.random(1, tablelength(GROUPS_BLUE))
-    while(contains(GROUPS_BLUE_DONE, _random)) do
+    while(contains(GROUPS_BLUE_DONE, _random) or contains(currentBlueGroupTarget, _random)) do
       _random = math.random(1, tablelength(GROUPS_BLUE))
     end
-    currentBlueGroupTarget = _random
+    currentBlueGroupTarget[tablelength(currentBlueGroupTarget) + 1] = _random
+    latestGroup = _random
   else
-    currentBlueGroupTarget = currentBlueGroupTarget + 1
+    while(contains(GROUPS_BLUE_DONE, latestGroup) or contains(currentBlueGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
+      latestGroup = latestGroup + 1
+    end
+    currentBlueGroupTarget[tablelength(currentBlueGroupTarget) + 1] = latestGroup
   end
-  local _randomTarget = math.random(GROUPS_BLUE[currentBlueGroupTarget][1], GROUPS_BLUE[currentBlueGroupTarget][2])
-  currentBlueTarget = _randomTarget
-  local _grpNames = getCurrentOperationGroupNameBlue()
+  local _randomTarget = math.random(GROUPS_BLUE[latestGroup][1], GROUPS_BLUE[latestGroup][2])
+  currentBlueTarget[tablelength(currentBlueTarget) + 1] = _randomTarget
+  local latestTarget = tablelength(currentBlueTarget)
+  local _grpNames = getCurrentOperationGroupNameBlue(latestTarget)
   for i=1, tablelength(_grpNames) do
-    if isCurrentOperationMapObjBlue()[i] == false then
+    if isCurrentOperationMapObjBlue(latestTarget)[i] == false then
       Group.getByName(_grpNames[i]):activate()
-      if BLUE_OPERATIONS[currentBlueTarget].showMark[i] == true then
+      if BLUE_OPERATIONS[_randomTarget].showMark[i] == true then
         trigger.action.markToCoalition(markCounterBlue, "---OBJECTIVE---", Group.getByName(_grpNames[i]):getUnit(1):getPosition().p, coalition.side.BLUE, true)
         markUsingBlue[tablelength(markUsingBlue) + 1] = markCounterBlue
         markCounterBlue = markCounterBlue + 1
       end
-    elseif isCurrentOperationMapObjBlue()[i] == true then
-      if BLUE_OPERATIONS[currentBlueTarget].showMark[i] == true then
+    elseif isCurrentOperationMapObjBlue(latestTarget)[i] == true then
+      if BLUE_OPERATIONS[_randomTarget].showMark[i] == true then
         trigger.action.markToCoalition(markCounterBlue, "---OBJECTIVE---", trigger.misc.getZone(_grpNames[i]).point, coalition.side.BLUE, true)
         markUsingBlue[tablelength(markUsingBlue) + 1] = markCounterBlue
         markCounterBlue = markCounterBlue + 1
       end
-    elseif isCurrentOperationMapObjBlue()[i] == "polygon" then
-      if BLUE_OPERATIONS[currentBlueTarget].showMark[i] == true then
+    elseif isCurrentOperationMapObjBlue(latestTarget)[i] == "polygon" then
+      if BLUE_OPERATIONS[_randomTarget].showMark[i] == true then
         trigger.action.markToCoalition(markCounterBlue, "---OBJECTIVE---", Group.getByName(_grpNames[i]):getUnit(1):getPosition().p, coalition.side.BLUE, true)
         markUsingBlue[tablelength(markUsingBlue) + 1] = markCounterBlue
         markCounterBlue = markCounterBlue + 1
       end
     end
-    for i=1, tablelength(getCurrentOperationExtrasBlue()) do
-      Group.getByName(getCurrentOperationExtrasBlue()[i]):activate()
+    for i=1, tablelength(getCurrentOperationExtrasBlue(latestTarget)) do
+      Group.getByName(getCurrentOperationExtrasBlue(latestTarget)[i]):activate()
     end
-    BLUE_OPERATIONS[currentBlueTarget].Done = {}
+    BLUE_OPERATIONS[_randomTarget].Done = {}
   end
-  printDataBlue()
+  printDataBlue(true)
 end
 -- ------------------ RED METHODS CODE -------------------------------
-local currentRedTarget = 0
-local currentRedGroupTarget = 0
+local currentRedTarget = {}
+local currentRedGroupTarget = {}
 local redPoints = 0
 local redACCasualties = 0
 local redHeliCasualties = 0
@@ -134,45 +160,62 @@ local redGroundUnitCasualties = 0
 local markCounterRed = 2000
 local markUsingRed = {}
 
-function getCurrentOperationGroupNameRed()
-  return RED_OPERATIONS[currentRedTarget].Name
+function getCurrentOperationGroupNameRed(i)
+  return RED_OPERATIONS[currentRedTarget[i]].Name
 end
 
-function isCurrentOperationMapObjRed()
-  return RED_OPERATIONS[currentRedTarget].isMapObj
+function isCurrentOperationMapObjRed(i)
+  return RED_OPERATIONS[currentRedTarget[i]].isMapObj
 end
 
-function getCurrentOperationBriefingRed()
-  return RED_OPERATIONS[currentRedTarget].Briefing
+function getCurrentOperationBriefingRed(i)
+  return RED_OPERATIONS[currentRedTarget[i]].Briefing
 end
 
-function getCurrentOperationExtrasRed()
-  return RED_OPERATIONS[currentRedTarget].Extras
-end
-
-function getCurrentOperationPointsRed()
-  return RED_OPERATIONS[currentRedTarget].Points
+function getCurrentOperationExtrasRed(i)
+  return RED_OPERATIONS[currentRedTarget[i]].Extras
 end
 
 function redDoneOperation(id)
-  redPoints = redPoints + RED_OPERATIONS[currentRedTarget].Points
+  redPoints = redPoints + RED_OPERATIONS[currentRedTarget[id]].Points
   for i=1, tablelength(markUsingRed) do
     trigger.action.removeMark(markUsingRed[i])
   end
-  GROUPS_RED_DONE[tablelength(GROUPS_RED_DONE) + 1] = id
+  GROUPS_RED_DONE[tablelength(GROUPS_RED_DONE) + 1] = currentRedGroupTarget[id]
+  table.remove(currentRedTarget, id)
+  table.remove(currentRedGroupTarget, id)
 end
 
-function printDataRed()
-  trigger.action.outTextForCoalition(coalition.side.RED, 'Target Report: \n' .. getCurrentOperationBriefingRed(), msgTimer)
+function printDataRed(lastOnly) -- lastOnly boolean that only shows the last activated group briefing
+  if lastOnly == false then
+    local finalStr = "Target Report: \n"
+    for i=1, tablelength(currentRedTarget) do
+      finalStr = finalStr .. currentRedGroupTarget[i] .. "#: " .. getCurrentOperationBriefingRed(i) .. "\n"
+    end
+    trigger.action.outTextForCoalition(coalition.side.RED, finalStr, msgTimer)
+  else
+    trigger.action.outTextForCoalition(coalition.side.RED, 'Target Report: \n' .. getCurrentOperationBriefingRed(tablelength(currentRedTarget)), msgTimer)
+  end
 end
 
 function soundRedThatIsOurTarget()
   trigger.action.outSoundForCoalition(coalition.side.RED, "That Is Our Target.ogg")
 end
 
+function activateMoreRed(showMsg)
+  if tablelength(GROUPS_RED) - (tablelength(GROUPS_RED_DONE) + tablelength(currentRedGroupTarget)) == 0 then
+    if showMsg == true then
+      trigger.action.outTextForCoalition(coalition.side.RED, "There are not any more targets left to activate! Destroy the remaining targets to win!", 15)
+    end
+  else
+    activateNextTargetRed()
+  end
+end
+
 function activateNextTargetRed()
   trigger.action.outSoundForCoalition(coalition.side.RED, 'tele.ogg')
   timer.scheduleFunction(soundRedThatIsOurTarget, nil, timer.getTime() + 6)
+  local latestGroup = 1
   if randomGroups == true then
     local _random = math.random(1, tablelength(GROUPS_RED))
     while(contains(GROUPS_RED_DONE, _random)) do
@@ -180,38 +223,42 @@ function activateNextTargetRed()
     end
     currentRedGroupTarget = _random
   else
-    currentRedGroupTarget = currentRedGroupTarget + 1
+    while(contains(GROUPS_RED_DONE, latestGroup) or contains(currentRedGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
+      latestGroup = latestGroup + 1
+    end
+    currentRedGroupTarget[tablelength(currentRedGroupTarget) + 1] = latestGroup
   end
-  local _randomTarget = math.random(GROUPS_RED[currentRedGroupTarget][1], GROUPS_RED[currentRedGroupTarget][2])
-  currentRedTarget = _randomTarget
-  local _grpNames = getCurrentOperationGroupNameRed()
+  local _randomTarget = math.random(GROUPS_RED[latestGroup][1], GROUPS_RED[latestGroup][2])
+  currentRedTarget[tablelength(currentRedTarget) + 1] = _randomTarget
+  local latestTarget = tablelength(currentRedTarget)
+  local _grpNames = getCurrentOperationGroupNameRed(latestTarget)
   for i=1, tablelength(_grpNames) do
-    if isCurrentOperationMapObjRed()[i] == false then
+    if isCurrentOperationMapObjRed(latestTarget)[i] == false then
       Group.getByName(_grpNames[i]):activate()
-      if RED_OPERATIONS[currentRedTarget].showMark[i] == true then
+      if RED_OPERATIONS[_randomTarget].showMark[i] == true then
         trigger.action.markToCoalition(markCounterRed, "---OBJECTIVE---", Group.getByName(_grpNames[i]):getUnit(1):getPosition().p, coalition.side.RED, true)
         markUsingRed[tablelength(markUsingRed) + 1] = markCounterRed
         markCounterRed = markCounterRed + 1
       end
-    elseif isCurrentOperationMapObjRed()[i] == true then
-      if RED_OPERATIONS[currentRedTarget].showMark[i] == true then
+    elseif isCurrentOperationMapObjRed(latestTarget)[i] == true then
+      if RED_OPERATIONS[_randomTarget].showMark[i] == true then
         trigger.action.markToCoalition(markCounterRed, "---OBJECTIVE---", trigger.misc.getZone(_grpNames[i]).point, coalition.side.RED, true)
         markUsingRed[tablelength(markUsingRed) + 1] = markCounterRed
         markCounterRed = markCounterRed + 1
       end
-    elseif isCurrentOperationMapObjRed()[i] == "polygon" then
-      if RED_OPERATIONS[currentRedTarget].showMark[i] == true then
+    elseif isCurrentOperationMapObjRed(latestTarget)[i] == "polygon" then
+      if RED_OPERATIONS[_randomTarget].showMark[i] == true then
         trigger.action.markToCoalition(markCounterRed, "---OBJECTIVE---", Group.getByName(_grpNames[i]):getUnit(1):getPosition().p, coalition.side.RED, true)
         markUsingRed[tablelength(markUsingRed) + 1] = markCounterRed
         markCounterRed = markCounterRed + 1
       end
     end
-    for i=1, tablelength(getCurrentOperationExtrasRed()) do
-      Group.getByName(getCurrentOperationExtrasRed()[i]):activate()
+    for i=1, tablelength(getCurrentOperationExtrasRed(latestTarget)) do
+      Group.getByName(getCurrentOperationExtrasRed(latestTarget)[i]):activate()
     end
-    RED_OPERATIONS[currentRedTarget].Done = {}
+    RED_OPERATIONS[_randomTarget].Done = {}
   end
-  printDataRed()
+  printDataRed(true)
 end
 
 -- ----------------------------------- EVENT CODE ------------------------------------
@@ -234,41 +281,51 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
   if category == Object.Category.UNIT then
     if who:getCoalition() == coalition.side.RED then
       local _grp = Unit.getGroup(who)
-      if(contains(getCurrentOperationGroupNameBlue(), _grp:getName())) and (groupIsDead(_grp:getName())) then
-        local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-        for i=1, totalNames do
-          if isCurrentOperationMapObjBlue()[i] == false then
-            if groupIsDead(getCurrentOperationGroupNameBlue()[i]) and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-              BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
+      for counter=1, tablelength(currentBlueTarget) do
+        if contains(getCurrentOperationGroupNameBlue(counter), _grp:getName()) and groupIsDead(_grp:getName()) then
+          local totalNames = tablelength(getCurrentOperationGroupNameBlue(counter))
+          for i=1, totalNames do
+            if isCurrentOperationMapObjBlue(counter)[i] == false then
+              if groupIsDead(getCurrentOperationGroupNameBlue(counter)[i]) and not contains(BLUE_OPERATIONS[currentBlueTarget[counter]].Done, getCurrentOperationGroupNameBlue(counter)[i]) then
+                BLUE_OPERATIONS[currentBlueTarget[counter]].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget[counter]].Done) + 1] = getCurrentOperationGroupNameBlue(counter)[i]
+              end
             end
           end
-        end
-        if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-          blueDoneOperation(currentBlueGroupTarget)
-          if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-            trigger.action.outText(blueWinMsg, msgTimer)
-          else
-           activateNextTargetBlue()
+          if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget[counter]].Done) == 0 then
+            trigger.action.outTextForCoalition(coalition.side.BLUE, "Target " .. currentBlueGroupTarget[counter] .. " destroyed!", msgTimer)
+            blueDoneOperation(counter)
+            if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
+              trigger.action.outText(blueWinMsg, msgTimer)
+              break
+            else
+              activateMoreBlue(false)
+              break
+            end
           end
         end
       end
     elseif who:getCoalition() == coalition.side.BLUE then
       local _grp = Unit.getGroup(who)
-      if(contains(getCurrentOperationGroupNameRed(), _grp:getName())) and (groupIsDead(_grp:getName())) then
-        local totalNames = tablelength(getCurrentOperationGroupNameRed())
-        for i=1, totalNames do
-          if isCurrentOperationMapObjRed()[i] == false then
-            if groupIsDead(getCurrentOperationGroupNameRed()[i]) and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-              RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
+      for counter=1, tablelength(currentRedTarget) do
+        if(contains(getCurrentOperationGroupNameRed(counter), _grp:getName())) and (groupIsDead(_grp:getName())) then
+          local totalNames = tablelength(getCurrentOperationGroupNameRed(counter))
+          for i=1, totalNames do
+            if isCurrentOperationMapObjRed(counter)[i] == false then
+              if groupIsDead(getCurrentOperationGroupNameRed(counter)[i]) and not contains(RED_OPERATIONS[currentRedTarget[counter]].Done, getCurrentOperationGroupNameRed(counter)[i]) then
+                RED_OPERATIONS[currentRedTarget[counter]].Done[tablelength(RED_OPERATIONS[currentRedTarget[counter]].Done) + 1] = getCurrentOperationGroupNameRed(counter)[i]
+              end
             end
           end
-        end
-        if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-          redDoneOperation(currentRedGroupTarget)
-          if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-            trigger.action.outText(redWinMsg, msgTimer)
-          else
-            activateNextTargetRed()
+          if totalNames - tablelength(RED_OPERATIONS[currentRedTarget[counter]].Done) == 0 then
+            trigger.action.outTextForCoalition(coalition.side.RED, "Target " .. currentRedGroupTarget[counter] .. " destroyed!", msgTimer)
+            redDoneOperation(counter)
+            if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
+              trigger.action.outText(redWinMsg, msgTimer)
+              break
+            else
+              activateMoreRed(false)
+              break
+            end
           end
         end
       end
@@ -277,76 +334,89 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
   --                               TARGET IS MAP OBJECT                            --
   -- ----------------------------------------------------------------------------- --
   elseif category == Object.Category.SCENERY then
-    if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, true) then
-      local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-      for i=1, totalNames do
-        if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == true then
-          if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameBlue()[i]})) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-            BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
+    for counter=1, tablelength(currentBlueTarget) do -- CHECK FOR BLUE
+      if contains(BLUE_OPERATIONS[currentBlueTarget[counter]].isMapObj, true) then
+        local totalNames = tablelength(getCurrentOperationGroupNameBlue(counter))
+        for i=1, totalNames do
+          if BLUE_OPERATIONS[currentBlueTarget[counter]].isMapObj[i] == true then
+            if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameBlue(counter)[i]})) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget[counter]].Done, getCurrentOperationGroupNameBlue(counter)[i]) then
+              BLUE_OPERATIONS[currentBlueTarget[counter]].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget[counter]].Done) + 1] = getCurrentOperationGroupNameBlue(counter)[i]
+            end
           end
         end
-      end
-      if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-        blueDoneOperation(currentBlueGroupTarget)
-        if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-          trigger.action.outText(blueWinMsg, msgTimer)
-        else
-          activateNextTargetBlue()
+        if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget[counter]].Done) == 0 then
+          trigger.action.outTextForCoalition(coalition.side.BLUE, "Target " .. currentBlueGroupTarget[counter] .. " destroyed!", msgTimer)
+          blueDoneOperation(counter)
+          if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
+            trigger.action.outText(blueWinMsg, msgTimer)
+            break
+          else
+            activateMoreBlue(false)
+            break
+          end
+        end
+      elseif contains(BLUE_OPERATIONS[currentBlueTarget[counter]].isMapObj, "polygon") then
+        local totalNames = tablelength(getCurrentOperationGroupNameBlue(counter))
+        for i=1, totalNames do
+          if BLUE_OPERATIONS[currentBlueTarget[counter]].isMapObj[i] == "polygon" then
+            if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameBlue(counter)[i]))) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget[counter]].Done, getCurrentOperationGroupNameBlue(counter)[i]) then
+              BLUE_OPERATIONS[currentBlueTarget[counter]].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget[counter]].Done) + 1] = getCurrentOperationGroupNameBlue(counter)[i]
+            end
+          end
+        end
+        if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget[counter]].Done) == 0 then
+          trigger.action.outTextForCoalition(coalition.side.BLUE, "Target " .. currentBlueGroupTarget[counter] .. " destroyed!", msgTimer)
+          blueDoneOperation(counter)
+          if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
+            trigger.action.outText(blueWinMsg, msgTimer)
+            break
+          else
+            activateMoreBlue(false)
+            break
+          end
         end
       end
     end
-    if contains(RED_OPERATIONS[currentRedTarget].isMapObj, true) then
-      local totalNames = tablelength(getCurrentOperationGroupNameRed())
-      for i=1, totalNames do
-        if RED_OPERATIONS[currentRedTarget].isMapObj[i] == true then
-          if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameRed()[i]})) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-            RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
+    for counter=1, tablelength(currentRedTarget) do -- CHECK FOR RED
+      if contains(RED_OPERATIONS[currentRedTarget[counter]].isMapObj, true) then
+        local totalNames = tablelength(getCurrentOperationGroupNameRed(counter))
+        for i=1, totalNames do
+          if RED_OPERATIONS[currentRedTarget[counter]].isMapObj[i] == true then
+            if tablelength(mist.getDeadMapObjsInZones({getCurrentOperationGroupNameRed(counter)[i]})) > 0 and not contains(RED_OPERATIONS[currentRedTarget[counter]].Done, getCurrentOperationGroupNameRed(counter)[i]) then
+              RED_OPERATIONS[currentRedTarget[counter]].Done[tablelength(RED_OPERATIONS[currentRedTarget[counter]].Done) + 1] = getCurrentOperationGroupNameRed(counter)[i]
+            end
           end
         end
-      end
-      if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-        redDoneOperation(currentRedGroupTarget)
-        if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-          trigger.action.outText(redWinMsg, msgTimer)
-        else
-          activateNextTargetRed()
-        end
-      end
-    end
-    -- ---------------------------IN CASE THE TARGET IS IN POLY ZONE -------------------------------------------
-    if contains(BLUE_OPERATIONS[currentBlueTarget].isMapObj, "polygon") then
-     local totalNames = tablelength(getCurrentOperationGroupNameBlue())
-      for i=1, totalNames do
-        if BLUE_OPERATIONS[currentBlueTarget].isMapObj[i] == "polygon" then
-          if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameBlue()[i]))) > 0 and not contains(BLUE_OPERATIONS[currentBlueTarget].Done, getCurrentOperationGroupNameBlue()[i]) then
-            BLUE_OPERATIONS[currentBlueTarget].Done[tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) + 1] = getCurrentOperationGroupNameBlue()[i]
+        if totalNames - tablelength(RED_OPERATIONS[currentRedTarget[counter]].Done) == 0 then
+          trigger.action.outTextForCoalition(coalition.side.RED, "Target " .. currentRedGroupTarget[counter] .. " destroyed!", msgTimer)
+          redDoneOperation(counter)
+          if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
+            trigger.action.outText(redWinMsg, msgTimer)
+            break
+          else
+            activateMoreRed(false)
+            break
           end
         end
-      end
-      if totalNames - tablelength(BLUE_OPERATIONS[currentBlueTarget].Done) == 0 then
-        blueDoneOperation(currentBlueGroupTarget)
-        if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
-          trigger.action.outText(blueWinMsg, msgTimer)
-        else
-          activateNextTargetBlue()
-        end
-      end
-    end
-    if contains(RED_OPERATIONS[currentRedTarget].isMapObj, "polygon") then
-      local totalNames = tablelength(getCurrentOperationGroupNameRed())
-      for i=1, totalNames do
-        if RED_OPERATIONS[currentRedTarget].isMapObj[i] == "polygon" then
-          if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameRed()[i]))) > 0 and not contains(RED_OPERATIONS[currentRedTarget].Done, getCurrentOperationGroupNameRed()[i]) then
-            RED_OPERATIONS[currentRedTarget].Done[tablelength(RED_OPERATIONS[currentRedTarget].Done) + 1] = getCurrentOperationGroupNameRed()[i]
+      elseif contains(RED_OPERATIONS[currentRedTarget[counter]].isMapObj, "polygon") then
+        local totalNames = tablelength(getCurrentOperationGroupNameRed(counter))
+        for i=1, totalNames do
+          if RED_OPERATIONS[currentRedTarget[counter]].isMapObj[i] == "polygon" then
+            if tablelength(mist.getDeadMapObjsInPolygonZone(mist.getGroupPoints(getCurrentOperationGroupNameRed(counter)[i]))) > 0 and not contains(RED_OPERATIONS[currentRedTarget[counter]].Done, getCurrentOperationGroupNameRed(counter)[i]) then
+              RED_OPERATIONS[currentRedTarget[counter]].Done[tablelength(RED_OPERATIONS[currentRedTarget[counter]].Done) + 1] = getCurrentOperationGroupNameRed(counter)[i]
+            end
           end
         end
-      end
-      if totalNames - tablelength(RED_OPERATIONS[currentRedTarget].Done) == 0 then
-        redDoneOperation(currentRedGroupTarget)
-        if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
-          trigger.action.outText(redWinMsg, msgTimer)
-        else
-          activateNextTargetRed()
+        if totalNames - tablelength(RED_OPERATIONS[currentRedTarget[counter]].Done) == 0 then
+          trigger.action.outTextForCoalition(coalition.side.RED, "Target " .. currentRedGroupTarget[counter] .. " destroyed!", msgTimer)
+          redDoneOperation(counter)
+          if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
+            trigger.action.outText(redWinMsg, msgTimer)
+            break
+          else
+            activateMoreRed(false)
+            break
+          end
         end
       end
     end
@@ -421,9 +491,12 @@ function missionRescue()
   detectAndActivateNext(Object.Category.SCENERY, nil)
 end
 mist.scheduleFunction(missionRescue, nil, timer.getTime() + 10, 180)
+-- --------------------------------------------------------------------------------------
 
-missionCommands.addCommandForCoalition(coalition.side.BLUE, 'Target report', nil, printDataBlue, nil)
-missionCommands.addCommandForCoalition(coalition.side.RED, 'Target report', nil, printDataRed, nil)
+missionCommands.addCommandForCoalition(coalition.side.BLUE, 'Target report', nil, printDataBlue, false)
+missionCommands.addCommandForCoalition(coalition.side.BLUE, 'Activate another target', nil, activateMoreBlue, true)
+missionCommands.addCommandForCoalition(coalition.side.RED, 'Target report', nil, printDataRed, false)
+missionCommands.addCommandForCoalition(coalition.side.RED, 'Activate another target', nil, activateMoreRed, true)
 
 activateNextTargetBlue()
 activateNextTargetRed()
