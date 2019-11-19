@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.10B - 19/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.11 - 19/11/2019 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -11,12 +11,15 @@ local msgTimer = _G["msgTimer"]
 local blueWinMsg = _G["blueWinMsg"]
 local redWinMsg = _G["redWinMsg"]
 
+local aircraftPoints = _G["aircraftPoints"]
 local aircraftCost = _G["aircraftCost"]
+local heliPoints = _G["heliPoints"]
 local heliCost = _G["heliCost"]
-local shipCost = _G["shipCost"]
-local unitCost = _G["unitCost"]
-local printScoreEvery = _G["printScoreEvery"]
+local shipPoints = _G["shipPoints"]
+local unitPoints = _G["unitPoints"]
 local printScoreFor = _G["printScoreFor"]
+
+local missionLength = _G["missionLength"]
 
 -- ------------------INIT VARIABLES (DO NOT MODIFY) ----------------------
 local GROUPS_BLUE_DONE = {}
@@ -262,6 +265,27 @@ function activateNextTargetRed()
   printDataRed(true)
 end
 
+-- -----------------------------SCORE PRINTER----------------------------------------
+function printPoints()
+  local totalPointsForBlue = bluePoints + redACCasualties*aircraftPoints + redHeliCasualties*heliPoints + redShipCasualties*shipPoints + redGroundUnitCasualties*unitPoints - blueACCasualties*aircraftCost - blueHeliCasualties*heliCost
+  local totalPointsForRed = redPoints + blueACCasualties*aircraftPoints + blueHeliCasualties*heliPoints + blueShipCasualties*shipPoints + blueGroundUnitCasualties*unitPoints - redACCasualties*aircraftCost - redHeliCasualties*heliCost
+  trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , printScoreFor)
+  trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, printScoreFor)
+  trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. bluePoints, printScoreFor)  
+  trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. redPoints, printScoreFor)  
+end
+mist.scheduleFunction(printPoints, nil, timer.getTime() + 60*missionLength)
+
+-- -----------------------------------MISSION ENDING COUNTER--------------------------
+function fifteenMoreMinutes()
+  trigger.action.outText("15 more minutes for mission end!", msgTimer)
+end
+mist.scheduleFunction(fifteenMoreMinutes, nil, timer.getTime() + 60*(missionLength - 15))
+function oneMoreHour()
+  trigger.action.outText("1 more hour for mission end!", msgTimer)
+end
+mist.scheduleFunction(oneMoreHour, nil, timer.getTime() + 60*(missionLength - 60))
+
 -- ----------------------------------- EVENT CODE ------------------------------------
 function groupIsDead(inGroupName)
   local groupHealth = 0
@@ -297,6 +321,7 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
             blueDoneOperation(counter)
             if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
               trigger.action.outText(blueWinMsg, msgTimer)
+              printPoints()
               break
             else
               activateMoreBlue(false)
@@ -322,6 +347,7 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
             redDoneOperation(counter)
             if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
               trigger.action.outText(redWinMsg, msgTimer)
+              printPoints()
               break
             else
               activateMoreRed(false)
@@ -350,6 +376,7 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
           blueDoneOperation(counter)
           if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
             trigger.action.outText(blueWinMsg, msgTimer)
+            printPoints()
             break
           else
             activateMoreBlue(false)
@@ -370,6 +397,7 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
           blueDoneOperation(counter)
           if(tablelength(GROUPS_BLUE) - tablelength(GROUPS_BLUE_DONE) == 0) then -- BLUE WON
             trigger.action.outText(blueWinMsg, msgTimer)
+            printPoints()
             break
           else
             activateMoreBlue(false)
@@ -393,6 +421,7 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
           redDoneOperation(counter)
           if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
             trigger.action.outText(redWinMsg, msgTimer)
+            printPoints()
             break
           else
             activateMoreRed(false)
@@ -413,6 +442,7 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
           redDoneOperation(counter)
           if(tablelength(GROUPS_RED) - tablelength(GROUPS_RED_DONE) == 0) then -- RED WON
             trigger.action.outText(redWinMsg, msgTimer)
+            printPoints()
             break
           else
             activateMoreRed(false)
@@ -471,27 +501,15 @@ function POINT_SYSTEM:onEvent(event)
 end
 world.addEventHandler(POINT_SYSTEM)
 
--- -----------------------------SCORE PRINTER----------------------------------------
-function printPoints()
-  local totalPointsForBlue = bluePoints + redACCasualties*aircraftCost + redHeliCasualties*heliCost + redShipCasualties*shipCost + redGroundUnitCasualties*unitCost
-  local totalPointsForRed = redPoints + blueACCasualties*aircraftCost + blueHeliCasualties*heliCost + blueShipCasualties*shipCost + blueGroundUnitCasualties*unitCost
-  trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , printScoreFor)
-  --trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, printScoreFor)
-  trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. bluePoints, printScoreFor)  
-  trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. redPoints, printScoreFor)  
-end
-
-mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, printScoreEvery)
-
 -- -----------------------------MISSION RESCUER-----------------------------------------
 -- Sometimes map objs get destroyed but don't call Unit dead event.
 -- Happens mostly when a lot of bombs are dropped around the map object, reducing its life
 -- That causes problems, while next target is not activated
--- The next part of code checks every 3 mins for destroyed targets like that
+-- The next part of code checks every 1.5 mins for destroyed targets like that
 function missionRescue()
   detectAndActivateNext(Object.Category.SCENERY, nil)
 end
-mist.scheduleFunction(missionRescue, nil, timer.getTime() + 10, 180)
+mist.scheduleFunction(missionRescue, nil, timer.getTime() + 10, 90)
 -- --------------------------------------------------------------------------------------
 
 missionCommands.addCommandForCoalition(coalition.side.BLUE, 'Target report', nil, printDataBlue, false)

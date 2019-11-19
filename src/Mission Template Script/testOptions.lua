@@ -9,13 +9,16 @@ blueWinMsg = 'BLUE WON'        -- Here we can Specify the Blue and Red Win messa
 redWinMsg = 'RED WON'
 
 -- ------------------POINT COSTS FOR OBJECTS------------------
-aircraftCost = 1
-heliCost = 0.5
-shipCost = 5
-unitCost = 0.3
-printScoreEvery = 300 -- How much time between its cycle to show message (in seconds)
-printScoreFor = 30 -- How much time will the message show up (in seconds)
-  
+aircraftPoints = 1 -- How many points are going to be awarded to the team that shot down the aircraft
+aircraftCost = 2 -- How many points are going to be withdrewed by the team who lost the aircraft
+heliPoints = 1 -- How many points are going to be awarded to the team that shot down the heli 
+heliCost = 1 -- How many points are going to be withdrewed by the team who lost the heli
+shipPoints = 5 -- How many points are going to be awarded to the team that destroyed the ship
+unitPoints = 0.3 -- How many points are going to be awarded to the team that destroyed the unit
+printScoreFor = 300 -- How much time will the message show up (in seconds)
+
+missionLength = 120 -- How many minutes until mission end
+
 BLUE_OPERATIONS[1] = {
   Name = {'BT_1'},
   isMapObj = {false},
