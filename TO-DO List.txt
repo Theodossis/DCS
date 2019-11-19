@@ -1,2 +1,1 @@
-NEED TO CHECK: RANDOM GROUPS WORK?
 + Cover missions that all targets are already enabled at the mission start

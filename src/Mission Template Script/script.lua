@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.10 - 19/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.10B - 19/11/2019 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -218,9 +218,10 @@ function activateNextTargetRed()
   local latestGroup = 1
   if randomGroups == true then
     local _random = math.random(1, tablelength(GROUPS_RED))
-    while(contains(GROUPS_RED_DONE, _random)) do
+    while(contains(GROUPS_RED_DONE, _random) or contains(currentRedGroupTarget, _random)) do
       _random = math.random(1, tablelength(GROUPS_RED))
     end
+    currentRedGroupTarget[tablelength(currentRedGroupTarget) + 1] = _random
     currentRedGroupTarget = _random
   else
     while(contains(GROUPS_RED_DONE, latestGroup) or contains(currentRedGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
