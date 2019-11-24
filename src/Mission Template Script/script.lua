@@ -1,10 +1,12 @@
 --[[
-    Template PvP Mission Script - Version: 1.11 - 19/11/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.12 - 19/11/2019 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
+local GROUPS_BLUE_EARLY_ACTIVATION = _G["GROUPS_BLUE_EARLY_ACTIVATION"]
 local RED_OPERATIONS = _G["RED_OPERATIONS"]
 local GROUPS_RED = _G["GROUPS_RED"]
+local GROUPS_RED_EARLY_ACTIVATION = _G["GROUPS_RED_EARLY_ACTIVATION"]
 local randomGroups = _G["randomGroups"]
 
 local msgTimer = _G["msgTimer"]
@@ -99,27 +101,26 @@ function activateMoreBlue(showMsg)
       trigger.action.outTextForCoalition(coalition.side.BLUE, "There are not any more targets left to activate! Destroy the remaining targets to win!", 15)
     end
   else
-    activateNextTargetBlue()
+    trigger.action.outSoundForCoalition(coalition.side.BLUE, 'tele.ogg')
+    timer.scheduleFunction(soundBlueThatIsOurTarget, nil, timer.getTime() + 6)
+    local latestGroup = 1
+    if randomGroups == true then
+      local _random = math.random(1, tablelength(GROUPS_BLUE))
+      while(contains(GROUPS_BLUE_DONE, _random) or contains(currentBlueGroupTarget, _random)) do
+        _random = math.random(1, tablelength(GROUPS_BLUE))
+      end
+      latestGroup = _random
+    else
+      while(contains(GROUPS_BLUE_DONE, latestGroup) or contains(currentBlueGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
+        latestGroup = latestGroup + 1
+      end
+    end
+    activateNextTargetBlue(latestGroup)
   end
 end
 
-function activateNextTargetBlue()
-  trigger.action.outSoundForCoalition(coalition.side.BLUE, 'tele.ogg')
-  timer.scheduleFunction(soundBlueThatIsOurTarget, nil, timer.getTime() + 6)
-  local latestGroup = 1
-  if randomGroups == true then
-    local _random = math.random(1, tablelength(GROUPS_BLUE))
-    while(contains(GROUPS_BLUE_DONE, _random) or contains(currentBlueGroupTarget, _random)) do
-      _random = math.random(1, tablelength(GROUPS_BLUE))
-    end
-    currentBlueGroupTarget[tablelength(currentBlueGroupTarget) + 1] = _random
-    latestGroup = _random
-  else
-    while(contains(GROUPS_BLUE_DONE, latestGroup) or contains(currentBlueGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
-      latestGroup = latestGroup + 1
-    end
-    currentBlueGroupTarget[tablelength(currentBlueGroupTarget) + 1] = latestGroup
-  end
+function activateNextTargetBlue(latestGroup)
+  currentBlueGroupTarget[tablelength(currentBlueGroupTarget) + 1] = latestGroup
   local _randomTarget = math.random(GROUPS_BLUE[latestGroup][1], GROUPS_BLUE[latestGroup][2])
   currentBlueTarget[tablelength(currentBlueTarget) + 1] = _randomTarget
   local latestTarget = tablelength(currentBlueTarget)
@@ -211,27 +212,26 @@ function activateMoreRed(showMsg)
       trigger.action.outTextForCoalition(coalition.side.RED, "There are not any more targets left to activate! Destroy the remaining targets to win!", 15)
     end
   else
-    activateNextTargetRed()
+    trigger.action.outSoundForCoalition(coalition.side.RED, 'tele.ogg')
+    timer.scheduleFunction(soundRedThatIsOurTarget, nil, timer.getTime() + 6)
+    local latestGroup = 1
+    if randomGroups == true then
+      local _random = math.random(1, tablelength(GROUPS_RED))
+      while(contains(GROUPS_RED_DONE, _random) or contains(currentRedGroupTarget, _random)) do
+        _random = math.random(1, tablelength(GROUPS_RED))
+      end
+      latestGroup = _random
+    else
+      while(contains(GROUPS_RED_DONE, latestGroup) or contains(currentRedGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
+        latestGroup = latestGroup + 1
+      end
+    end
+    activateNextTargetRed(latestGroup)
   end
 end
 
-function activateNextTargetRed()
-  trigger.action.outSoundForCoalition(coalition.side.RED, 'tele.ogg')
-  timer.scheduleFunction(soundRedThatIsOurTarget, nil, timer.getTime() + 6)
-  local latestGroup = 1
-  if randomGroups == true then
-    local _random = math.random(1, tablelength(GROUPS_RED))
-    while(contains(GROUPS_RED_DONE, _random) or contains(currentRedGroupTarget, _random)) do
-      _random = math.random(1, tablelength(GROUPS_RED))
-    end
-    currentRedGroupTarget[tablelength(currentRedGroupTarget) + 1] = _random
-    currentRedGroupTarget = _random
-  else
-    while(contains(GROUPS_RED_DONE, latestGroup) or contains(currentRedGroupTarget, latestGroup)) do -- METRAEI KATA SEIRA, AFOY EINAI SEIRIAKO, VRISKEI I TETOIO OSTE NA MHN EXEI PAIKSEI (I GROUP)
-      latestGroup = latestGroup + 1
-    end
-    currentRedGroupTarget[tablelength(currentRedGroupTarget) + 1] = latestGroup
-  end
+function activateNextTargetRed(latestGroup)
+  currentRedGroupTarget[tablelength(currentRedGroupTarget) + 1] = latestGroup
   local _randomTarget = math.random(GROUPS_RED[latestGroup][1], GROUPS_RED[latestGroup][2])
   currentRedTarget[tablelength(currentRedTarget) + 1] = _randomTarget
   local latestTarget = tablelength(currentRedTarget)
@@ -517,5 +517,18 @@ missionCommands.addCommandForCoalition(coalition.side.BLUE, 'Activate another ta
 missionCommands.addCommandForCoalition(coalition.side.RED, 'Target report', nil, printDataRed, false)
 missionCommands.addCommandForCoalition(coalition.side.RED, 'Activate another target', nil, activateMoreRed, true)
 
-activateNextTargetBlue()
-activateNextTargetRed()
+-- -----------------------------EARLY GROUP ACTIVATOR---------------------------------------
+if(tablelength(GROUPS_BLUE_EARLY_ACTIVATION) == 0) then
+  activateMoreBlue(false)
+else
+  for i=1, tablelength(GROUPS_BLUE_EARLY_ACTIVATION) do
+    activateNextTargetBlue(GROUPS_BLUE_EARLY_ACTIVATION[i])
+  end
+end
+if(tablelength(GROUPS_RED_EARLY_ACTIVATION) == 0) then
+  activateMoreRed(false)
+else
+  for i=1, tablelength(GROUPS_RED_EARLY_ACTIVATION) do
+    activateNextTargetRed(GROUPS_RED_EARLY_ACTIVATION[i])
+  end
+end

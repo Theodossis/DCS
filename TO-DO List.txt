@@ -1,1 +1,1 @@
-+ Cover missions that all targets are already enabled at the mission start
++ Save the game status for next mission

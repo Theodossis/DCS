@@ -1,13 +1,15 @@
 GROUPS_BLUE = {{1, 1}, {2, 2}, {3, 4}}
-BLUE_OPERATIONS = {} -- ---------- LEAVE EMPTY ---------- 
+GROUPS_BLUE_EARLY_ACTIVATION = {1, 2, 3} -- GROUP IDS THAT ARE GOING TO BE ACTIVATED AT SCRIPT START (FOR BLUE TEAM)
 GROUPS_RED = {{1, 1}, {2, 2}, {3, 4}}
-RED_OPERATIONS = {} -- ---------- LEAVE EMPTY ---------- 
+GROUPS_RED_EARLY_ACTIVATION = {1, 2}  -- GROUP IDS THAT ARE GOING TO BE ACTIVATED AT SCRIPT START (FOR RED TEAM)
 randomGroups = false
 
 msgTimer = 60          -- We specify the time that the target's asignment message will remain visible. The current target's message can be always recall via the F10 menu by selecting Target Report option. 
 blueWinMsg = 'BLUE WON'        -- Here we can Specify the Blue and Red Win messages.
 redWinMsg = 'RED WON'
 
+RED_OPERATIONS = {} -- ---------- LEAVE EMPTY ---------- 
+BLUE_OPERATIONS = {} -- ---------- LEAVE EMPTY ---------- 
 -- ------------------POINT COSTS FOR OBJECTS------------------
 aircraftPoints = 1 -- How many points are going to be awarded to the team that shot down the aircraft
 aircraftCost = 2 -- How many points are going to be withdrewed by the team who lost the aircraft
