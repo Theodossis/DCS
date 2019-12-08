@@ -124,9 +124,10 @@ function EV_MANAGER:onEvent(event)
       setup(playerName)
     end
     missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Show weapons left", nil, printHowManyLeft, playerName)
-    for i, ammo in pairs(event.initiator:getAmmo()) do
-      trigger.action.outText(ammo.desc.typeName, msgTimer)
-    end
+    --FOR DEBUGGING
+    --for i, ammo in pairs(event.initiator:getAmmo()) do
+    --  trigger.action.outText(ammo.desc.typeName, msgTimer)
+    --end
   elseif event.id == world.event.S_EVENT_TAKEOFF then
     for i, ammo in pairs(event.initiator:getAmmo()) do
       for j=1, tablelength(limitations) do
