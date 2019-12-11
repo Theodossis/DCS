@@ -1,1 +1,3 @@
-+ Save the game status for next mission
++ Add display names on Weapon Manager for better looking messages
++ Save script for Mission Template Script
++ Save script for casual missions
