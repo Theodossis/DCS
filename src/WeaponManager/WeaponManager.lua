@@ -1,20 +1,44 @@
 --[[
-    Weapon Manager Script - Version: 1.1 - 11/12/2019 by Theodossis Papadopoulos 
+    Weapon Manager Script - Version: 1.2 - 11/12/2019 by Theodossis Papadopoulos 
        ]]
 local msgTimer = 15
 local limitations = {}
 
 limitations[1] = {
   WP_NAME = "AIM_120C",
-  QTY = 1,
+  QTY = 10
 }
 limitations[2] = {
   WP_NAME = "AIM_120",
-  QTY = 15,
+  QTY = 10
 }
 limitations[3] = {
-  WP_NAME = "AIM_9X",
-  QTY = 30,
+  WP_NAME = "SD-10",
+  QTY = 10
+}
+limitations[4] = {
+  WP_NAME = "P_27TE",
+  QTY = 10
+}
+limitations[5] = {
+  WP_NAME = "P_27PE",
+  QTY = 10
+}
+limitations[6] = {
+  WP_NAME = "P_77",
+  QTY = 10
+}
+limitations[7] = {
+  WP_NAME = "AIM_54A_Mk47",
+  QTY = 6
+}
+limitations[8] = {
+  WP_NAME = "AIM_54A_Mk60",
+  QTY = 6
+}
+limitations[9] = {
+  WP_NAME = "AIM_54C_Mk47",
+  QTY = 6
 }
 
 local playersSettedUp = {}
@@ -38,7 +62,7 @@ function contains(tab, val)
 end
 -- --------------------DATA MANAGER--------------------
 function setup(playerName)
-  data[tablelength(data) + 1] = { PlayerName = playerName, Limitations = limitations}
+  data[tablelength(data) + 1] = { ["PlayerName"] = playerName, ["Limitations"] = mist.utils.deepCopy(limitations) }
   playersSettedUp[tablelength(playersSettedUp) + 1] = playerName
 end
 
@@ -90,7 +114,7 @@ function makeLess(playerName, wpn, howMany, unit)
             trigger.action.outTextForGroup(unit:getGroup():getID(), "LOADOUT NOT VALID, RETURN TO BASE FOR REARMING NOW OR YOU WILL BE DESTROYED IN 5 MINS", 300)
             if not destroyerContains(unit:getName()) then
               local id = mist.scheduleFunction(destroyAfter5MINS, {unit:getName()}, timer.getTime() + 300)
-              tobedestroyed[tablelength(tobedestroyed) + 1] = { Unitname = unit:getName(), Funcid = id}
+              tobedestroyed[tablelength(tobedestroyed) + 1] = { ["Unitname"] = unit:getName(), ["Funcid"] = id}
             end
           end
           data[i].Limitations[j].QTY = data[i].Limitations[j].QTY - howMany
@@ -110,11 +134,11 @@ function printHowManyLeft(playerName)
       if(us:getPlayerName() == playerName) then -- Found him!
         earlyBreak = true
         trigger.action.outTextForGroup(gp:getID(), "Weapons left for " .. playerName .. " :", msgTimer)
-        local text = ""
         local secondearlyBreak = false
         for d=1, tablelength(data) do
           if data[d].PlayerName == playerName then
             secondearlyBreak = true
+            local text = ""
             for e=1, tablelength(data[d].Limitations) do
               text = text .. data[d].Limitations[e].WP_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
             end
@@ -135,13 +159,13 @@ function printHowManyLeft(playerName)
       if(us:getPlayerName() == playerName) then -- Found him!
         earlyBreak = true
         trigger.action.outTextForGroup(gp:getID(), "Weapons left for " .. playerName .. " :", msgTimer)
-        local text = ""
         local secondearlyBreak = false
         for d=1, tablelength(data) do
           if data[d].PlayerName == playerName then
             secondearlyBreak = true
+            local text = ""
             for e=1, tablelength(data[d].Limitations) do
-              text = text + data[d].Limitations[e].WP_NAME + " : " + data[d].Limitations[e].QTY + "\n"
+              text = text .. data[d].Limitations[e].WP_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
             end
             trigger.action.outTextForGroup(gp:getID(), text, msgTimer)
           end
@@ -167,7 +191,7 @@ function EV_MANAGER:onEvent(event)
         setup(playerName)
       end
       missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Show weapons left", nil, printHowManyLeft, playerName)
-      --FOR DEBUGGING
+      --FOR WEAPON DEBUGGING
       --for i, ammo in pairs(event.initiator:getAmmo()) do
       --  trigger.action.outText(ammo.desc.typeName, msgTimer)
       --end
