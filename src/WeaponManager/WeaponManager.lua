@@ -1,46 +1,57 @@
 --[[
-    Weapon Manager Script - Version: 1.2 - 11/12/2019 by Theodossis Papadopoulos 
+    Weapon Manager Script - Version: 1.3 - 12/12/2019 by Theodossis Papadopoulos
+    -- Requires MIST
        ]]
 local msgTimer = 15
-local limitations = {}
+local limitations = {} -- Do not touch
 
+-- ---------------------------LIMITATIONS-----------------------------------
 limitations[1] = {
   WP_NAME = "AIM_120C",
-  QTY = 10
+  QTY = 10,
+  DISPLAY_NAME = "AIM 120C"
 }
 limitations[2] = {
   WP_NAME = "AIM_120",
-  QTY = 10
+  QTY = 10,
+  DISPLAY_NAME = "AIM 120B"
 }
 limitations[3] = {
   WP_NAME = "SD-10",
-  QTY = 10
+  QTY = 10,
+  DISPLAY_NAME = "SD-10"
 }
 limitations[4] = {
   WP_NAME = "P_27TE",
-  QTY = 10
+  QTY = 10,
+  DISPLAY_NAME = "R-27ET"
 }
 limitations[5] = {
   WP_NAME = "P_27PE",
-  QTY = 10
+  QTY = 10,
+  DISPLAY_NAME = "R-27ER"
 }
 limitations[6] = {
   WP_NAME = "P_77",
-  QTY = 10
+  QTY = 10,
+  DISPLAY_NAME = "R-77"
 }
 limitations[7] = {
   WP_NAME = "AIM_54A_Mk47",
-  QTY = 6
+  QTY = 6,
+  DISPLAY_NAME = "AIM 54A-Mk47"
 }
 limitations[8] = {
   WP_NAME = "AIM_54A_Mk60",
-  QTY = 6
+  QTY = 6,
+  DISPLAY_NAME = "AIM 54A-Mk60"
 }
 limitations[9] = {
   WP_NAME = "AIM_54C_Mk47",
-  QTY = 6
+  QTY = 6,
+  DISPLAY_NAME = "AIM 54C-Mk47"
 }
-
+-- ----------------------- DO NOT TOUCH UNDER HERE-------------------------------
 local playersSettedUp = {}
 local data = {}
 local tobedestroyed = {}
@@ -140,7 +151,7 @@ function printHowManyLeft(playerName)
             secondearlyBreak = true
             local text = ""
             for e=1, tablelength(data[d].Limitations) do
-              text = text .. data[d].Limitations[e].WP_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
+              text = text .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
             end
             trigger.action.outTextForGroup(gp:getID(), text, msgTimer)
           end
@@ -165,7 +176,7 @@ function printHowManyLeft(playerName)
             secondearlyBreak = true
             local text = ""
             for e=1, tablelength(data[d].Limitations) do
-              text = text .. data[d].Limitations[e].WP_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
+              text = text .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
             end
             trigger.action.outTextForGroup(gp:getID(), text, msgTimer)
           end
