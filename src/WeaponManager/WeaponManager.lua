@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.3 - 12/12/2019 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.4 - 13/12/2019 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -8,7 +8,7 @@ local limitations = {} -- Do not touch
 -- ---------------------------LIMITATIONS-----------------------------------
 limitations[1] = {
   WP_NAME = "AIM_120C",
-  QTY = 10,
+  QTY = 6,
   DISPLAY_NAME = "AIM 120C"
 }
 limitations[2] = {
@@ -70,6 +70,13 @@ function contains(tab, val)
         end
     end
     return false
+end
+
+function tableConcat(t1, t2)
+  for i=1, #t2 do
+    t1[#t1+1] = t2[i]
+  end
+  return t1
 end
 -- --------------------DATA MANAGER--------------------
 function setup(playerName)
@@ -137,27 +144,44 @@ function makeLess(playerName, wpn, howMany, unit)
     end
   end
 end
--- --------------------DATA PRINTER--------------------
-function printHowManyLeft(playerName)
+
+function validateLoadout(playerName) 
   local earlyBreak = false
-  for i, gp in pairs(coalition.getGroups(coalition.side.BLUE, Group.Category.AIRPLANE)) do -- Blue checker
+  local blueGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.BLUE, Group.Category.AIRPLANE))
+  local redGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.RED, Group.Category.AIRPLANE))
+  local allGroups = tableConcat(blueGroups, redGroups)
+  for i, gp in pairs(allGroups) do
     for j, us in pairs(gp:getUnits()) do
-      if(us:getPlayerName() == playerName) then -- Found him!
+      if(us:getPlayerName() == playerName) then
         earlyBreak = true
-        trigger.action.outTextForGroup(gp:getID(), "Weapons left for " .. playerName .. " :", msgTimer)
-        local secondearlyBreak = false
-        for d=1, tablelength(data) do
-          if data[d].PlayerName == playerName then
-            secondearlyBreak = true
-            local text = ""
-            for e=1, tablelength(data[d].Limitations) do
-              text = text .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
+        local secondaryearlyBreak = false
+        if us:inAir() == false then
+          for d=1, tablelength(data) do
+            if data[d].PlayerName == playerName then
+              secondaryearlyBreak = true
+              local text = "Loadout validation for " .. playerName .. " : \n----------------------------------------------------------------------"
+              local valid = true
+              for e=1, tablelength(data[d].Limitations) do
+                for a=1, tablelength(us:getAmmo()) do
+                  if(data[d].Limitations[e].WP_NAME == us:getAmmo()[a].desc.typeName) then
+                    if(data[d].Limitations[e].QTY - us:getAmmo()[a].count < 0) then
+                      valid = false
+                      text = text .. "\n" .. "You need to remove " .. -(data[d].Limitations[e].QTY - us:getAmmo()[a].count) .. "x" .. data[d].Limitations[e].DISPLAY_NAME
+                    end
+                  end
+                end
+              end
+              if valid == true then
+                text = text .. "\nYour loadout is valid"
+              end
+              trigger.action.outTextForGroup(gp:getID(), text, msgTimer*2)
             end
-            trigger.action.outTextForGroup(gp:getID(), text, msgTimer)
+            if secondaryearlyBreak == true then
+              break
+            end
           end
-          if secondearlyBreak == true then
-            break
-          end
+        else
+          trigger.action.outTextForGroup(gp:getID(), "You cannot validate loadout while you are on air", msgTimer)
         end
       end
     end
@@ -165,18 +189,24 @@ function printHowManyLeft(playerName)
       break
     end
   end
-  for i, gp in pairs(coalition.getGroups(coalition.side.RED, Group.Category.AIRPLANE)) do -- Red checker
+end
+-- --------------------DATA PRINTER--------------------
+function printHowManyLeft(playerName)
+  local earlyBreak = false
+  local blueGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.BLUE, Group.Category.AIRPLANE))
+  local redGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.RED, Group.Category.AIRPLANE))
+  local allGroups = tableConcat(blueGroups, redGroups)
+  for i, gp in pairs(allGroups) do
     for j, us in pairs(gp:getUnits()) do
       if(us:getPlayerName() == playerName) then -- Found him!
         earlyBreak = true
-        trigger.action.outTextForGroup(gp:getID(), "Weapons left for " .. playerName .. " :", msgTimer)
         local secondearlyBreak = false
         for d=1, tablelength(data) do
           if data[d].PlayerName == playerName then
             secondearlyBreak = true
-            local text = ""
+            local text = "Weapons left for " .. playerName .. " : \n----------------------------------------------------------------------"
             for e=1, tablelength(data[d].Limitations) do
-              text = text .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY .. "\n"
+              text = text .. "\n" .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY
             end
             trigger.action.outTextForGroup(gp:getID(), text, msgTimer)
           end
@@ -197,11 +227,12 @@ function EV_MANAGER:onEvent(event)
   if event.id == world.event.S_EVENT_BIRTH then
     if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE then
       local playerName = event.initiator:getPlayerName()
-      missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left"})
+      missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left", [2] = "Validate Loadout"})
       if not contains(playersSettedUp, playerName) then
         setup(playerName)
       end
       missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Show weapons left", nil, printHowManyLeft, playerName)
+      missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Validate Loadout", nil, validateLoadout, playerName)
       --FOR WEAPON DEBUGGING
       --for i, ammo in pairs(event.initiator:getAmmo()) do
       --  trigger.action.outText(ammo.desc.typeName, msgTimer)
@@ -239,6 +270,22 @@ function EV_MANAGER:onEvent(event)
         trigger.action.outTextForGroup(event.initiator:getGroup():getID(), "You have been destroyed because you fired a limited weapon", msgTimer, true)
         trigger.action.explosion(event.initiator:getPosition().p, 100)
         trigger.action.explosion(event.weapon:getPosition().p, 100)
+        break
+      end
+    end
+  elseif event.id == world.event.S_EVENT_DEAD then
+    for i=1, tablelength(tobedestroyed) do
+      if(tobedestroyed[i].Unitname == event.initiator:getName()) then -- FOUND HIM
+        mist.removeFunction(tobedestroyed[i].Funcid)
+        table.remove(tobedestroyed, i)
+        break
+      end
+    end
+  elseif event.id == world.event.S_EVENT_EJECTION then
+    for i=1, tablelength(tobedestroyed) do
+      if(tobedestroyed[i].Unitname == event.initiator:getName()) then -- FOUND HIM
+        mist.removeFunction(tobedestroyed[i].Funcid)
+        table.remove(tobedestroyed, i)
         break
       end
     end
