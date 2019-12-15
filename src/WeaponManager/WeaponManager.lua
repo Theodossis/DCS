@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.5 - 15/12/2019 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.4 - 13/12/2019 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -55,7 +55,6 @@ limitations[9] = {
 local playersSettedUp = {}
 local data = {}
 local tobedestroyed = {}
-local alreadyBorn = {}
 
 -- ----------------------- MISC METHODS CODE ------------------------------------
 function tablelength(T)
@@ -223,29 +222,17 @@ function printHowManyLeft(playerName)
   end
 end
 
-function alreadyBornContains(unitname)
-  for i=1, tablelength(alreadyBorn) do
-    if alreadyBorn[i].Unitname == unitname then
-      return true
-    end
-  end
-  return false
-end
-
 EV_MANAGER = {}
 function EV_MANAGER:onEvent(event)
   if event.id == world.event.S_EVENT_BIRTH then
     if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE then
       local playerName = event.initiator:getPlayerName()
+      missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left", [2] = "Validate Loadout"})
       if not contains(playersSettedUp, playerName) then
         setup(playerName)
       end
-      if not alreadyBornContains(event.initiator:getName()) then
-        missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left", [2] = "Validate Loadout"})
-        missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Show weapons left", nil, printHowManyLeft, playerName)
-        missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Validate Loadout", nil, validateLoadout, playerName)
-        alreadyBorn[tablelength(alreadyBorn) + 1] = { Unitname = event.initiator:getName(), Playername = playerName }
-      end
+      missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Show weapons left", nil, printHowManyLeft, playerName)
+      missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Validate Loadout", nil, validateLoadout, playerName)
       --FOR WEAPON DEBUGGING
       --for i, ammo in pairs(event.initiator:getAmmo()) do
       --  trigger.action.outText(ammo.desc.typeName, msgTimer)
@@ -286,23 +273,11 @@ function EV_MANAGER:onEvent(event)
         break
       end
     end
-    for i=1, tablelength(alreadyBorn) do
-      if alreadyBorn[i].Unitname == event.initiator:getName() and alreadyBorn[i].Playername == event.initiator:getPlayerName() then
-        table.remove(alreadyBorn, i)
-        break
-      end
-    end
   elseif event.id == world.event.S_EVENT_DEAD then
     for i=1, tablelength(tobedestroyed) do
       if(tobedestroyed[i].Unitname == event.initiator:getName()) then -- FOUND HIM
         mist.removeFunction(tobedestroyed[i].Funcid)
         table.remove(tobedestroyed, i)
-        break
-      end
-    end
-    for i=1, tablelength(alreadyBorn) do
-      if alreadyBorn[i].Unitname == event.initiator:getName() and alreadyBorn[i].Playername == event.initiator:getPlayerName() then
-        table.remove(alreadyBorn, i)
         break
       end
     end
@@ -312,21 +287,6 @@ function EV_MANAGER:onEvent(event)
         mist.removeFunction(tobedestroyed[i].Funcid)
         table.remove(tobedestroyed, i)
         break
-      end
-    end
-    for i=1, tablelength(alreadyBorn) do
-      if alreadyBorn[i].Unitname == event.initiator:getName() and alreadyBorn[i].Playername == event.initiator:getPlayerName() then
-        table.remove(alreadyBorn, i)
-        break
-      end
-    end
-  elseif event.id == world.event.S_EVENT_PLAYER_LEAVE_UNIT then
-    if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE then
-      for i=1, tablelength(alreadyBorn) do
-        if alreadyBorn[i].Unitname == event.initiator:getName() and alreadyBorn[i].Playername == event.initiator:getPlayerName() then
-          table.remove(alreadyBorn, i)
-          break
-        end
       end
     end
   end
