@@ -1,4 +1,2 @@
-* WeaponManager: fix bug with two seat aircraft
-
 + Save script for Mission Template Script
 + Save script for casual missions

@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.5 - 16/12/2019 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.6 - 18/12/2019 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -144,47 +144,46 @@ function makeLess(playerName, wpn, howMany, unit)
   end
 end
 
-function validateLoadout(playerName) 
+function validateLoadout(gpid) 
   local earlyBreak = false
-  local blueGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.BLUE, Group.Category.AIRPLANE))
-  local redGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.RED, Group.Category.AIRPLANE))
-  local allGroups = tableConcat(blueGroups, redGroups)
-  for i, gp in pairs(allGroups) do
-    for j=1, tablelength(gp:getUnits()) do
-      local us = gp:getUnits()[j]
-      if(us:getPlayerName() == playerName) then
-        earlyBreak = true
-        local secondaryearlyBreak = false
-        if us:inAir() == false then
-          for d=1, tablelength(data) do
-            if data[d].PlayerName == playerName then
-              secondaryearlyBreak = true
-              local text = "Loadout validation for " .. playerName .. " : \n----------------------------------------------------------------------"
-              local valid = true
-              if us:getAmmo() ~= nil then
-                for e=1, tablelength(data[d].Limitations) do
-                  for a=1, tablelength(us:getAmmo()) do
-                    if(data[d].Limitations[e].WP_NAME == us:getAmmo()[a].desc.typeName) then
-                      if(data[d].Limitations[e].QTY - us:getAmmo()[a].count < 0) then
-                        valid = false
-                        text = text .. "\n" .. "You need to remove " .. -(data[d].Limitations[e].QTY - us:getAmmo()[a].count) .. "x" .. data[d].Limitations[e].DISPLAY_NAME
-                      end
+  local blueUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.BLUE))
+  local redUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.RED))
+  local allUnits = tableConcat(blueUnits, redUnits)
+  for j=1, tablelength(allUnits) do
+    local us = allUnits[j]
+    if us:getGroup():getID() == gpid and us:getGroup():getCategory() == Group.Category.AIRPLANE then -- Found him/them for two seat
+      earlyBreak = true
+      local playerName = us:getPlayerName()
+      local secondaryearlyBreak = false
+      if us:inAir() == false then
+        for d=1, tablelength(data) do
+          if data[d].PlayerName == playerName then
+            secondaryearlyBreak = true
+            local text = "Loadout validation for " .. playerName .. " : \n----------------------------------------------------------------------"
+            local valid = true
+            if us:getAmmo() ~= nil then
+              for e=1, tablelength(data[d].Limitations) do
+                for a=1, tablelength(us:getAmmo()) do
+                  if(data[d].Limitations[e].WP_NAME == us:getAmmo()[a].desc.typeName) then
+                    if(data[d].Limitations[e].QTY - us:getAmmo()[a].count < 0) then
+                      valid = false
+                      text = text .. "\n" .. "You need to remove " .. -(data[d].Limitations[e].QTY - us:getAmmo()[a].count) .. "x" .. data[d].Limitations[e].DISPLAY_NAME
                     end
                   end
                 end
               end
-              if valid == true then
-                text = text .. "\nYour loadout is valid"
-              end
-              trigger.action.outTextForGroup(gp:getID(), text, msgTimer*2)
             end
-            if secondaryearlyBreak == true then
-              break
+            if valid == true then
+              text = text .. "\nYour loadout is valid"
             end
+            trigger.action.outTextForGroup(us:getGroup():getID(), text, msgTimer*2)
           end
-        else
-          trigger.action.outTextForGroup(gp:getID(), "You cannot validate loadout while you are on air", msgTimer)
+          if secondaryearlyBreak == true then
+            break
+          end
         end
+      else
+        trigger.action.outTextForGroup(us:getGroup():getID(), "You cannot validate loadout while you are on air", msgTimer)
       end
     end
     if earlyBreak == true then
@@ -193,29 +192,28 @@ function validateLoadout(playerName)
   end
 end
 -- --------------------DATA PRINTER--------------------
-function printHowManyLeft(playerName)
+function printHowManyLeft(gpid)
   local earlyBreak = false
-  local blueGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.BLUE, Group.Category.AIRPLANE))
-  local redGroups = mist.utils.deepCopy(coalition.getGroups(coalition.side.RED, Group.Category.AIRPLANE))
-  local allGroups = tableConcat(blueGroups, redGroups)
-  for i, gp in pairs(allGroups) do
-    for j=1, tablelength(gp:getUnits()) do
-      local us = gp:getUnits()[j]
-      if(us:getPlayerName() == playerName) then -- Found him!
-        earlyBreak = true
-        local secondearlyBreak = false
-        for d=1, tablelength(data) do
-          if data[d].PlayerName == playerName then
-            secondearlyBreak = true
-            local text = "Weapons left for " .. playerName .. " : \n----------------------------------------------------------------------"
-            for e=1, tablelength(data[d].Limitations) do
-              text = text .. "\n" .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY
-            end
-            trigger.action.outTextForGroup(gp:getID(), text, msgTimer)
+  local blueUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.BLUE))
+  local redUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.RED))
+  local allUnits = tableConcat(blueUnits, redUnits)
+  for j=1, tablelength(allUnits) do
+    local us = allUnits[j]
+    if us:getGroup():getID() == gpid and us:getGroup():getCategory() == Group.Category.AIRPLANE then -- Found him/them for two seat
+      earlyBreak = true
+      local playerName = us:getPlayerName()
+      local secondearlyBreak = false
+      for d=1, tablelength(data) do
+        if data[d].PlayerName == playerName then
+          secondearlyBreak = true
+          local text = "Weapons left for " .. playerName .. " : \n----------------------------------------------------------------------"
+          for e=1, tablelength(data[d].Limitations) do
+            text = text .. "\n" .. data[d].Limitations[e].DISPLAY_NAME .. " : " .. data[d].Limitations[e].QTY
           end
-          if secondearlyBreak == true then
-            break
-          end
+          trigger.action.outTextForGroup(us:getGroup():getID(), text, msgTimer)
+        end
+        if secondearlyBreak == true then
+          break
         end
       end
     end
@@ -233,9 +231,10 @@ function EV_MANAGER:onEvent(event)
       if not contains(playersSettedUp, playerName) then
         setup(playerName)
       end
-      missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left", [2] = "Validate Loadout"})
-      missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Show weapons left", nil, printHowManyLeft, playerName)
-      missionCommands.addCommandForGroup(event.initiator:getGroup():getID(), "Validate Loadout", nil, validateLoadout, playerName)
+      local gpid = event.initiator:getGroup():getID()
+      missionCommands.removeItemForGroup(gpid, {[1] = "Show weapons left", [2] = "Validate Loadout"})
+      missionCommands.addCommandForGroup(gpid, "Show weapons left", nil, printHowManyLeft, gpid)
+      missionCommands.addCommandForGroup(gpid, "Validate Loadout", nil, validateLoadout, gpid)
       --FOR WEAPON DEBUGGING
       --for i, ammo in pairs(event.initiator:getAmmo()) do
       --  trigger.action.outText(ammo.desc.typeName, msgTimer)
