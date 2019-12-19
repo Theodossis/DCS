@@ -1,15 +1,21 @@
+--[[
+    Point System Script - Version: 1.01 - 19/12/2019 by Theodossis Papadopoulos 
+       ]]
 -- Mission Template Script already contains it
 -- Requires MIST script
 
 -- ------------------POINT COSTS FOR OBJECTS------------------
-local aircraftCost = 1
-local heliCost = 0.5
-local shipCost = 5
-local unitCost = 0.3
-local printScoreEvery = 300 -- How much time between its cycle to show message (in seconds)
-local printScoreFor = 30 -- How much time will the message show up (in seconds)
+local aircraftPoints = 1 -- How many points will be rewarded to the team which shoot down the aircraft
+local aircraftCost = 2 -- How many points will be removed from the team who lost the aircraft
+local heliPoints = 1 -- How many points will be rewarded to the team which shoot down the helicopter
+local heliCost = 1 -- How many points will be removed from the team who lost the helicopter
+local shipPoints = 5 -- How many points will be rewarded to the team which sank the ship
+local unitPoints = 0.3 -- How many points will be rewarded to the team which destroyed a ground unit
 
--- ------------------CODE DO NOT TOUCH ------------------
+local printScoreEvery = 300 -- How much time between its cycle to show message (in seconds)
+local printScoreFor = 20 -- How much time will the message show up (in seconds)
+
+-- ------------------ CODE DO NOT TOUCH ------------------
 local blueACCasualties = 0
 local blueHeliCasualties = 0
 local blueShipCasualties = 0
@@ -60,8 +66,8 @@ end
 world.addEventHandler(POINT_SYSTEM)
 -- -----------------------------SCORE PRINTER----------------------------------------
 function printPoints()
-  local totalPointsForBlue = redACCasualties*aircraftCost + redHeliCasualties*heliCost + redShipCasualties*shipCost + redGroundUnitCasualties*unitCost
-  local totalPointsForRed = blueACCasualties*aircraftCost + blueHeliCasualties*heliCost + blueShipCasualties*shipCost + blueGroundUnitCasualties*unitCost
+  local totalPointsForBlue = redACCasualties*aircraftPoints + redHeliCasualties*heliPoints + redShipCasualties*shipPoints + redGroundUnitCasualties*unitPoints - blueACCasualties*aircraftCost - blueHeliCasualties*heliCost
+  local totalPointsForRed = blueACCasualties*aircraftPoints + blueHeliCasualties*heliPoints + blueShipCasualties*shipPoints + blueGroundUnitCasualties*unitPoints - redACCasualties*aircraftCost - redHeliCasualties*heliCost
   trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , printScoreFor)
   trigger.action.outText('POINTS:  BLUELAND TEAM: ' .. totalPointsForBlue .. '  / REDLAND TEAM: ' .. totalPointsForRed, printScoreFor)
   trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties, printScoreFor)  
