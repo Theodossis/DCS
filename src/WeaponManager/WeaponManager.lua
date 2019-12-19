@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.7 - 19/12/2019 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.7B - 19/12/2019 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -232,7 +232,6 @@ function EV_MANAGER:onEvent(event)
         setup(playerName)
       end
       local gpid = event.initiator:getGroup():getID()
-      missionCommands.removeItemForGroup(gpid, {[1] = "Show weapons left", [2] = "Validate Loadout"})
       missionCommands.addCommandForGroup(gpid, "Show weapons left", nil, printHowManyLeft, gpid)
       missionCommands.addCommandForGroup(gpid, "Validate Loadout", nil, validateLoadout, gpid)
       --FOR WEAPON DEBUGGING
@@ -257,7 +256,7 @@ function EV_MANAGER:onEvent(event)
   elseif event.id == world.event.S_EVENT_LAND then
     if event.initiator ~= nil then
       if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE then
-        if event.initiator:getAmmo() ~= nil then
+        if event.initiator:getAmmo() ~= nil then 
           for i, ammo in pairs(event.initiator:getAmmo()) do
             for j=1, tablelength(limitations) do
               if(limitations[j].WP_NAME == ammo.desc.typeName) then
@@ -291,6 +290,7 @@ function EV_MANAGER:onEvent(event)
     end
   elseif event.id == world.event.S_EVENT_DEAD then
     if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE then
+      missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left", [2] = "Validate Loadout"})
       for i=1, tablelength(tobedestroyed) do
         if(tobedestroyed[i].Unitname == event.initiator:getName()) then -- FOUND HIM
           mist.removeFunction(tobedestroyed[i].Funcid)
@@ -300,6 +300,7 @@ function EV_MANAGER:onEvent(event)
       end
     end
   elseif event.id == world.event.S_EVENT_EJECTION then
+    missionCommands.removeItemForGroup(event.initiator:getGroup():getID(), {[1] = "Show weapons left", [2] = "Validate Loadout"})
     for i=1, tablelength(tobedestroyed) do
       if(tobedestroyed[i].Unitname == event.initiator:getName()) then -- FOUND HIM
         mist.removeFunction(tobedestroyed[i].Funcid)
