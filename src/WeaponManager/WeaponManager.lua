@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.6 - 18/12/2019 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.7 - 19/12/2019 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -128,8 +128,8 @@ function makeLess(playerName, wpn, howMany, unit)
       for j=1, tablelength(data[i].Limitations) do
         if(data[i].Limitations[j].WP_NAME == wpn) then -- FOUND WEAPON
           if(data[i].Limitations[j].QTY - howMany < 0) then
-            trigger.action.outTextForGroup(unit:getGroup():getID(), "LOADOUT NOT VALID, RETURN TO BASE FOR REARMING NOW OR YOU WILL BE DESTROYED IN 5 MINS", 300)
             if not destroyerContains(unit:getName()) then
+              trigger.action.outTextForGroup(unit:getGroup():getID(), "LOADOUT NOT VALID, RETURN TO BASE FOR REARMING NOW OR YOU WILL BE DESTROYED IN 5 MINS", 300)
               local id = mist.scheduleFunction(destroyAfter5MINS, {unit:getName()}, timer.getTime() + 300)
               tobedestroyed[tablelength(tobedestroyed) + 1] = { ["Unitname"] = unit:getName(), ["Funcid"] = id}
             end
