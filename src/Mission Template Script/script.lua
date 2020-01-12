@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.13 - 19/12/2019 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.14 - 12/1/2020 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -8,6 +8,7 @@ local RED_OPERATIONS = _G["RED_OPERATIONS"]
 local GROUPS_RED = _G["GROUPS_RED"]
 local GROUPS_RED_EARLY_ACTIVATION = _G["GROUPS_RED_EARLY_ACTIVATION"]
 local randomGroups = _G["randomGroups"]
+local autoActivateNext = _G["autoActivateNext"]
 
 local msgTimer = _G["msgTimer"]
 local blueWinMsg = _G["blueWinMsg"]
@@ -324,7 +325,9 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
               printPoints()
               break
             else
-              activateMoreBlue(false)
+              if autoActivateNext == true then
+                activateMoreBlue(false)
+              end
               break
             end
           end
@@ -350,7 +353,9 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
               printPoints()
               break
             else
-              activateMoreRed(false)
+              if autoActivateNext == true then
+                activateMoreRed(false)
+              end
               break
             end
           end
@@ -379,7 +384,9 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
             printPoints()
             break
           else
-            activateMoreBlue(false)
+            if autoActivateNext == true then
+              activateMoreBlue(false)
+            end
             break
           end
         end
@@ -400,7 +407,9 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
             printPoints()
             break
           else
-            activateMoreBlue(false)
+            if autoActivateNext == true then
+              activateMoreBlue(false)
+            end
             break
           end
         end
@@ -424,7 +433,9 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
             printPoints()
             break
           else
-            activateMoreRed(false)
+            if autoActivateNext == true then
+              activateMoreRed(false)
+            end
             break
           end
         end
@@ -445,7 +456,9 @@ function detectAndActivateNext(category, who) -- COALITION OPTIONAL, CATEGORY IS
             printPoints()
             break
           else
-            activateMoreRed(false)
+            if autoActivateNext == true then
+              activateMoreRed(false)
+            end
             break
           end
         end

@@ -3,6 +3,7 @@ GROUPS_BLUE_EARLY_ACTIVATION = {1, 2, 3} -- GROUP IDS THAT ARE GOING TO BE ACTIV
 GROUPS_RED = {{1, 1}, {2, 2}, {3, 4}}
 GROUPS_RED_EARLY_ACTIVATION = {1, 2}  -- GROUP IDS THAT ARE GOING TO BE ACTIVATED AT SCRIPT START (FOR RED TEAM)
 randomGroups = false
+autoActivateNext = false
 
 msgTimer = 60          -- We specify the time that the target's asignment message will remain visible. The current target's message can be always recall via the F10 menu by selecting Target Report option. 
 blueWinMsg = 'BLUE WON'        -- Here we can Specify the Blue and Red Win messages.
