@@ -18,9 +18,11 @@ heliPoints = 1 -- How many points are going to be awarded to the team that shot 
 heliCost = 1 -- How many points are going to be withdrewed by the team who lost the heli
 shipPoints = 5 -- How many points are going to be awarded to the team that destroyed the ship
 unitPoints = 0.3 -- How many points are going to be awarded to the team that destroyed the unit
-printScoreFor = 300 -- How much time will the message show up (in seconds)
 
-missionLength = 120 -- How many minutes until mission end
+printScoreEvery = 180 -- How much time between its cycle to show message (in seconds)
+printScoreFor = 20 -- How much time will the message show up (in seconds)
+
+missionLength = 150 -- How many minutes until mission end
 
 BLUE_OPERATIONS[1] = {
   Name = {'BT_1'},

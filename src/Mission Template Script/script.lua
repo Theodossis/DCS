@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.14 - 12/1/2020 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.15 - 12/1/2020 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -20,6 +20,7 @@ local heliPoints = _G["heliPoints"]
 local heliCost = _G["heliCost"]
 local shipPoints = _G["shipPoints"]
 local unitPoints = _G["unitPoints"]
+local printScoreEvery = _G["printScoreEvery"]
 local printScoreFor = _G["printScoreFor"]
 
 local missionLength = _G["missionLength"]
@@ -275,6 +276,7 @@ function printPoints()
   trigger.action.outText('BLUE TEAM CASUALTIES: A/C:' .. blueACCasualties .. ' HELO: ' .. blueHeliCasualties .. ' SHIPS: ' .. blueShipCasualties .. ' GROUND UNITS: ' .. blueGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. bluePoints, printScoreFor)  
   trigger.action.outText('RED TEAM CASUALTIES: A/C:' .. redACCasualties .. ' HELO: ' .. redHeliCasualties .. ' SHIPS: ' .. redShipCasualties .. ' GROUND UNITS: ' .. redGroundUnitCasualties .. ' \nPOINTS FROM OPERATIONS: '.. redPoints, printScoreFor)  
 end
+mist.scheduleFunction(printPoints, nil, timer.getTime() + 10, printScoreEvery)
 mist.scheduleFunction(printPoints, nil, timer.getTime() + 60*missionLength)
 
 -- -----------------------------------MISSION ENDING COUNTER--------------------------
