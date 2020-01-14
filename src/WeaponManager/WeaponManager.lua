@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.8 - 21/12/2019 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.9 - 13/1/2020 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -223,7 +223,7 @@ function printHowManyLeft(gpid)
   end
 end
 
-EV_MANAGER = {}
+local EV_MANAGER = {}
 function EV_MANAGER:onEvent(event)
   if event.id == world.event.S_EVENT_BIRTH then
     if event.initiator:getCategory() == Object.Category.UNIT then
