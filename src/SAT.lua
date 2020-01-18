@@ -1,5 +1,5 @@
 --[[
-    SAT - Satellite Imagery Script - Version: 1.0 - 16/1/2020 by Theodossis Papadopoulos
+    SAT - Satellite Imagery Script - Version: 1.01 - 16/1/2020 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local maxSATTargets = 8 -- How much targets will SAT provide at maximum
@@ -13,13 +13,13 @@ local mainbaseRed = "Khasab"
 local DET_TARGETS_BLUE = {} -- UNIT_NAME, TYPE, POS (IN VEC3) which targets have blue SAT detected
 local DET_TARGETS_RED = {} -- Which targets have red SAT detected
 
-function tablelength(T)
+local function tablelength(T)
   local count = 0
   for _ in pairs(T) do count = count + 1 end
   return count
 end
 
-function contains(tab, val)
+local function contains(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
             return true
@@ -28,14 +28,14 @@ function contains(tab, val)
     return false
 end
 
-function tableConcat(t1, t2)
+local function tableConcat(t1, t2)
   for i=1, #t2 do
     t1[#t1+1] = t2[i]
   end
   return t1
 end
 
-function round(x, n)
+local function round(x, n)
   n = math.pow(10, n or 0)
   x = x * n
   if x >= 0 then x = math.floor(x + 0.5) else x = math.ceil(x - 0.5) end
@@ -50,7 +50,7 @@ local function tableStr(tab)
   return finalStr
 end
 
-function updateTargets()
+local function updateTargets()
   -- For Blue team (searching RED targets)
   if tablelength(SAT_NAMES_BLUE) > 0 then
     DET_TARGETS_BLUE = {}
@@ -111,7 +111,7 @@ function updateTargets()
   end
 end
 
-function showTargets(gpid)
+local function showTargets(gpid)
   local earlyBreak = false
   local blueUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.BLUE))
   local redUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.RED))
@@ -167,20 +167,20 @@ function EV_MANAGER:onEvent(event)
         for i=1, tablelength(SAT_NAMES_BLUE) do
           if SAT_NAMES_BLUE[i] == event.initiator:getName() then -- FOUND IT
             table.remove(SAT_NAMES_BLUE, i)
+            trigger.action.outTextForCoalition(coalition.side.BLUE, "Our satellite station: " .. event.initiator:getName() .. " has just been destroyed!", 30)
+            trigger.action.outTextForCoalition(coalition.side.RED, "We have successfully destroyed blue's team satellite station: " .. event.initiator:getName(), 30)
           end
         end
-        trigger.action.outTextForCoalition(coalition.side.BLUE, "Our satellite station: " .. event.initiator:getName() .. " has just been destroyed!", 30)
-        trigger.action.outTextForCoalition(coalition.side.RED, "We have successfully destroyed blue's team satellite station: " .. event.initiator:getName(), 30)
       end
       -- Check for Red team
       if event.initiator:getCoalition() == coalition.side.RED then
         for i=1, tablelength(SAT_NAMES_RED) do
           if SAT_NAMES_RED[i] == event.initiator:getName() then -- FOUND IT
             table.remove(SAT_NAMES_RED, i)
+            trigger.action.outTextForCoalition(coalition.side.RED, "Our satellite station: " .. event.initiator:getName() .. " has just been destroyed!", 30)
+            trigger.action.outTextForCoalition(coalition.side.BLUE, "We have successfully destroyed red's team satellite station: " .. event.initiator:getName(), 30)
           end
         end
-        trigger.action.outTextForCoalition(coalition.side.RED, "Our satellite station: " .. event.initiator:getName() .. " has just been destroyed!", 30)
-        trigger.action.outTextForCoalition(coalition.side.BLUE, "We have successfully destroyed red's team satellite station: " .. event.initiator:getName(), 30)
       end
     end
   end
