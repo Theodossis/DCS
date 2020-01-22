@@ -18,20 +18,20 @@ TARGETS_FOR_BLUE[1] = {
 }
 TARGETS_FOR_BLUE[2] = {
   Targets = {"BT_2"},
-  DisplayName = "SUKA BLYAT",
-  Briefing = "SUKA BLYAT",
+  DisplayName = "something 2",
+  Briefing = "some briefing",
   Points = 2
 }
 TARGETS_FOR_BLUE[3] = {
   Targets = {"BT_3"},
-  DisplayName = "NAKALENI SUKA",
-  Briefing = "NAKALENI SUKA",
+  DisplayName = "something 3",
+  Briefing = "some briefing",
   Points = 2
 }
 
 TARGETS_FOR_RED[1] = {
   Targets = {"RT_1", "RT_2"},
-  DisplayName = "LOL",
+  DisplayName = "something",
   Briefing = "Just destroy them",
   Points = 2
 }
