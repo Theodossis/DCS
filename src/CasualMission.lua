@@ -1,8 +1,8 @@
 --[[
-    Casual Mission script - Version: 1.0 - 18/1/2020 by Theodossis Papadopoulos
+    Casual Mission script - Version: 1.01 - 27/1/2020 by Theodossis Papadopoulos
     -- Requires MIST
     
-    -- Points only work with my other script: PointSystem ELSE use variables: 
+    -- Points only work with my other script: PointSystem ELSE use variables: extraBluePoints, extraRedPoints
        ]]
 
 -- -----------------------------------CODE DO NOT TOUCH-----------------------------------
@@ -117,63 +117,65 @@ function EV_MANAGER:onEvent(event)
   elseif event.id == world.event.S_EVENT_DEAD then
     -- FOR BLUE TEAM
     local un = event.initiator
-    if un:getCoalition() == coalition.side.RED then -- Red target destroyed
-      local earlyBreak = false
-      for i=1, tablelength(TARGETS_FOR_BLUE) do
-        if tablelength(TARGETS_FOR_BLUE[i].Progression) ~= tablelength(TARGETS_FOR_BLUE[i].Targets) then -- Check if it is already done
-          if un:getCategory() == Object.Category.UNIT then
-            if groupIsDead(un:getGroup():getName()) then
-              if contains(TARGETS_FOR_BLUE[i].Targets, un:getGroup():getName()) then
-                TARGETS_FOR_BLUE[i].Progression[tablelength(TARGETS_FOR_BLUE[i].Progression) + 1] = un:getGroup():getName()
+    if un:getCategory() == Object.Category.UNIT then
+      if un:getCoalition() == coalition.side.RED then -- Red target destroyed
+        local earlyBreak = false
+        for i=1, tablelength(TARGETS_FOR_BLUE) do
+          if tablelength(TARGETS_FOR_BLUE[i].Progression) ~= tablelength(TARGETS_FOR_BLUE[i].Targets) then -- Check if it is already done
+            if un:getCategory() == Object.Category.UNIT then
+              if groupIsDead(un:getGroup():getName()) then
+                if contains(TARGETS_FOR_BLUE[i].Targets, un:getGroup():getName()) then
+                  TARGETS_FOR_BLUE[i].Progression[tablelength(TARGETS_FOR_BLUE[i].Progression) + 1] = un:getGroup():getName()
+                  earlyBreak = true
+                end
+              end
+            elseif un:getCategory() == Object.Category.STATIC then
+              if contains(TARGETS_FOR_BLUE[i].Targets, un:getName()) then
+                TARGETS_FOR_BLUE[i].Progression[tablelength(TARGETS_FOR_BLUE[i].Progression) + 1] = un:getName()
                 earlyBreak = true
               end
             end
-          elseif un:getCategory() == Object.Category.STATIC then
-            if contains(TARGETS_FOR_BLUE[i].Targets, un:getName()) then
-              TARGETS_FOR_BLUE[i].Progression[tablelength(TARGETS_FOR_BLUE[i].Progression) + 1] = un:getName()
-              earlyBreak = true
+            if tablelength(TARGETS_FOR_BLUE[i].Progression) == tablelength(TARGETS_FOR_BLUE[i].Targets) then -- TARGET DESTRUCTION COMPLETED
+              trigger.action.outTextForCoalition(coalition.side.BLUE, "We have successfully destroyed RED's team " .. TARGETS_FOR_BLUE[i].DisplayName, 20)
+              trigger.action.outTextForCoalition(coalition.side.RED, "Our " .. TARGETS_FOR_BLUE[i].DisplayName .. " have just been destroyed by BLUE team", 20)
+              if extraBluePoints ~= nil then
+                extraBluePoints = extraBluePoints + TARGETS_FOR_BLUE[i].Points
+              end
             end
-          end
-          if tablelength(TARGETS_FOR_BLUE[i].Progression) == tablelength(TARGETS_FOR_BLUE[i].Targets) then -- TARGET DESTRUCTION COMPLETED
-            trigger.action.outTextForCoalition(coalition.side.BLUE, "We have successfully destroyed RED's team " .. TARGETS_FOR_BLUE[i].DisplayName, 20)
-            trigger.action.outTextForCoalition(coalition.side.RED, "Our " .. TARGETS_FOR_BLUE[i].DisplayName .. " have just been destroyed by BLUE team", 20)
-            if extraBluePoints ~= nil then
-              extraBluePoints = extraBluePoints + TARGETS_FOR_BLUE[i].Points
+            if earlyBreak == true then
+              break
             end
-          end
-          if earlyBreak == true then
-            break
           end
         end
       end
-    end
-    -- FOR RED TEAM
-    if un:getCoalition() == coalition.side.BLUE then -- Blue target destroyed
-      local earlyBreak = false
-      for i=1, tablelength(TARGETS_FOR_RED) do
-        if tablelength(TARGETS_FOR_RED[i].Progression) ~= tablelength(TARGETS_FOR_RED[i].Targets) then -- Check if it is already done
-          if un:getCategory() == Object.Category.UNIT then
-            if groupIsDead(un:getGroup():getName()) then
-              if contains(TARGETS_FOR_RED[i].Targets, un:getGroup():getName()) then
-                TARGETS_FOR_RED[i].Progression[tablelength(TARGETS_FOR_RED[i].Progression) + 1] = un:getGroup():getName()
+      -- FOR RED TEAM
+      if un:getCoalition() == coalition.side.BLUE then -- Blue target destroyed
+        local earlyBreak = false
+        for i=1, tablelength(TARGETS_FOR_RED) do
+          if tablelength(TARGETS_FOR_RED[i].Progression) ~= tablelength(TARGETS_FOR_RED[i].Targets) then -- Check if it is already done
+            if un:getCategory() == Object.Category.UNIT then
+              if groupIsDead(un:getGroup():getName()) then
+                if contains(TARGETS_FOR_RED[i].Targets, un:getGroup():getName()) then
+                  TARGETS_FOR_RED[i].Progression[tablelength(TARGETS_FOR_RED[i].Progression) + 1] = un:getGroup():getName()
+                  earlyBreak = true
+                end
+              end
+            elseif un:getCategory() == Object.Category.STATIC then
+              if contains(TARGETS_FOR_RED[i].Targets, un:getName()) then
+                TARGETS_FOR_RED[i].Progression[tablelength(TARGETS_FOR_RED[i].Progression) + 1] = un:getName()
                 earlyBreak = true
               end
             end
-          elseif un:getCategory() == Object.Category.STATIC then
-            if contains(TARGETS_FOR_RED[i].Targets, un:getName()) then
-              TARGETS_FOR_RED[i].Progression[tablelength(TARGETS_FOR_RED[i].Progression) + 1] = un:getName()
-              earlyBreak = true
+            if tablelength(TARGETS_FOR_RED[i].Progression) == tablelength(TARGETS_FOR_RED[i].Targets) then -- TARGET DESTRUCTION COMPLETED
+              trigger.action.outTextForCoalition(coalition.side.RED, "We have successfully destroyed BLUE's team " .. TARGETS_FOR_RED[i].DisplayName , 20)
+              trigger.action.outTextForCoalition(coalition.side.BLUE, "Our " .. TARGETS_FOR_RED[i].DisplayName .. " have just been destroyed by RED team", 20)
+              if extraRedPoints ~= nil then
+                extraRedPoints = extraRedPoints + TARGETS_FOR_RED[i].Points
+              end
             end
-          end
-          if tablelength(TARGETS_FOR_RED[i].Progression) == tablelength(TARGETS_FOR_RED[i].Targets) then -- TARGET DESTRUCTION COMPLETED
-            trigger.action.outTextForCoalition(coalition.side.RED, "We have successfully destroyed BLUE's team " .. TARGETS_FOR_RED[i].DisplayName , 20)
-            trigger.action.outTextForCoalition(coalition.side.BLUE, "Our " .. TARGETS_FOR_RED[i].DisplayName .. " have just been destroyed by RED team", 20)
-            if extraRedPoints ~= nil then
-              extraRedPoints = extraRedPoints + TARGETS_FOR_RED[i].Points
+            if earlyBreak == true then
+              break
             end
-          end
-          if earlyBreak == true then
-            break
           end
         end
       end
