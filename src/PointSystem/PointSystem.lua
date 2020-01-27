@@ -1,5 +1,5 @@
 --[[
-    Point System Script - Version: 1.03 - 18/1/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.04 - 27/1/2020 by Theodossis Papadopoulos 
        ]]
 -- Mission Template Script already contains it
 -- Requires MIST script
@@ -32,22 +32,25 @@ local redGroundUnitCasualties = 0
 -- -------------------------EVENT LISTENER-------------------------
 local POINT_SYSTEM = {}
 function POINT_SYSTEM:onEvent(event)
-  local who = event.initiator
-  if event.id == world.event.S_EVENT_DEAD then
+  if event.id == world.event.S_EVENT_PILOT_DEAD or event.id == world.event.S_EVENT_EJECTION then
+    local who = event.initiator
+    if who:getGroup():getCategory() == Group.Category.AIRPLANE then
+      if who:getCoalition() == coalition.side.BLUE then
+        blueACCasualties = blueACCasualties + 1
+      elseif who:getCoalition() == coalition.side.RED then
+        redACCasualties = redACCasualties + 1
+      end
+    elseif who:getGroup():getCategory() == Group.Category.HELICOPTER then
+      if who:getCoalition() == coalition.side.BLUE then
+        blueHeliCasualties = blueHeliCasualties + 1
+      elseif who:getCoalition() == coalition.side.RED then
+        redHeliCasualties = redHeliCasualties + 1
+      end
+    end
+  elseif event.id == world.event.S_EVENT_DEAD then
+    local who = event.initiator
     if who:getCategory() == Object.Category.UNIT then
-      if who:getGroup():getCategory() == Group.Category.AIRPLANE then
-        if who:getCoalition() == coalition.side.BLUE then
-          blueACCasualties = blueACCasualties + 1
-        elseif who:getCoalition() == coalition.side.RED then
-          redACCasualties = redACCasualties + 1
-        end
-      elseif who:getGroup():getCategory() == Group.Category.HELICOPTER then
-        if who:getCoalition() == coalition.side.BLUE then
-          blueHeliCasualties = blueHeliCasualties + 1
-        elseif who:getCoalition() == coalition.side.RED then
-          redHeliCasualties = redHeliCasualties + 1
-        end
-      elseif who:getGroup():getCategory() == Group.Category.SHIP then
+      if who:getGroup():getCategory() == Group.Category.SHIP then
         if who:getCoalition() == coalition.side.BLUE then
           blueShipCasualties = blueShipCasualties + 1
         elseif who:getCoalition() == coalition.side.RED then
