@@ -1,5 +1,5 @@
 --[[
-    Casual Mission script - Version: 1.01 - 27/1/2020 by Theodossis Papadopoulos
+    Casual Mission script - Version: 1.02 - 2/2/2020 by Theodossis Papadopoulos
     -- Requires MIST
     
     -- Points only work with my other script: PointSystem ELSE use variables: extraBluePoints, extraRedPoints
@@ -117,7 +117,7 @@ function EV_MANAGER:onEvent(event)
   elseif event.id == world.event.S_EVENT_DEAD then
     -- FOR BLUE TEAM
     local un = event.initiator
-    if un:getCategory() == Object.Category.UNIT then
+    if un:getCategory() == Object.Category.UNIT or un:getCategory() == Object.Category.STATIC then
       if un:getCoalition() == coalition.side.RED then -- Red target destroyed
         local earlyBreak = false
         for i=1, tablelength(TARGETS_FOR_BLUE) do
