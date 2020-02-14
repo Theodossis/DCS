@@ -1,4 +1,5 @@
 DCS WEAPON NAMES -> DCS ENGINE NAMES:
+  -- AIM 9X -> AIM_9X
   -- AIM 120C -> AIM_120C
   -- AIM 120B -> AIM_120
   -- SD-10    -> SD-10
@@ -13,7 +14,7 @@ DCS WEAPON NAMES -> DCS ENGINE NAMES:
   -- AGM-84 -> weapons.missiles.AGM_84D
   -- AGM-88 -> weapons.missiles.AGM_88
   -- AGM-154A -> weapons.missiles.AGM_154A
-  -- AGM-154C -> weapons.missiles.AGM_154C
+  -- AGM-154C -> weapons.missiles.AGM_154
   -- GBU-31 -> weapons.bombs.GBU_31
   -- GBU-31(V)3/B -> weapons.bombs.GBU_31_V_3B
   -- GBU-38 -> weapons.bombs.GBU_38
