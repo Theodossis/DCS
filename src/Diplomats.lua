@@ -1,5 +1,5 @@
 --[[
-    Diplomats capture script - Version: 1.0 - 22/1/2020 by Theodossis Papadopoulos
+    Diplomats capture script - Version: 1.1 - 21/2/2020 by Theodossis Papadopoulos
     -- Requires MIST
     -- Compatible with my Point System
        ]]
@@ -53,11 +53,7 @@ end
 
 local function isInZone(un, zonename)
   local zone = trigger.misc.getZone(zonename)
-  if((un:getPosition().p.x - zone.point.x)^2 + (un:getPosition().p.z - zone.point.z)^2)^0.5 < zone.radius then
-    return true
-  else
-    return false
-  end
+  return ((un:getPosition().p.x - zone.point.x)^2 + (un:getPosition().p.z - zone.point.z)^2)^0.5 < zone.radius
 end
 
 local function isCarrying(gpid)
