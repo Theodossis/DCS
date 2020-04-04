@@ -1,13 +1,13 @@
 --[[
-    Point System Script - Version: 1.00 - 27/3/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.01 - 4/4/2020 by Theodossis Papadopoulos 
        ]]
 -- Requires MIST script
 local STATIC_LIST = {}
-
+local MATCH_ENDED = false
 -- ----------------------- CONFIGURATION ------------------------------------
-
 local msgTimer = 10 -- In seconds
 local scoreboardTimer = 120 -- In seconds
+local scoreboardMessageTimer = 20 -- In seconds
 local countdownTimer = 9000 -- In seconds
 
 local airplanePoints = 50 -- In seconds
@@ -79,38 +79,44 @@ local function setCoalition(playerName, coalitionSide)
 end
 
 local function addScore(playerName, howMany)
-  local earlyBreak = false
-  for i=1, tablelength(data) do
-    if(data[i].PlayerName == playerName) then -- FOUND HIM
-      earlyBreak = true
-      data[i].Score = data[i].Score + howMany
-    end
-    if earlyBreak == true then
-      break
+  if not MATCH_ENDED then 
+    local earlyBreak = false
+    for i=1, tablelength(data) do
+      if(data[i].PlayerName == playerName) then -- FOUND HIM
+        earlyBreak = true
+        data[i].Score = data[i].Score + howMany
+      end
+      if earlyBreak == true then
+        break
+      end
     end
   end
 end
 
 local function addScoreCoalition(coalitionSide, howMany)
-  local size = tablelength(data)
-  if size > 0 then
-    for i=1, size do
-      if data[i].Coalition == coalitionSide then
-        data[i].Score = data[i].Score + howMany
+  if not MATCH_ENDED then 
+    local size = tablelength(data)
+    if size > 0 then
+      for i=1, size do
+        if data[i].Coalition == coalitionSide then
+          data[i].Score = data[i].Score + howMany
+        end
       end
     end
   end
 end
 
 local function addDeath(playerName)
-  local earlyBreak = false
-  for i=1, tablelength(data) do
-    if(data[i].PlayerName == playerName) then
-      earlyBreak = true
-      data[i].Deaths = data[i].Deaths + 1
-    end
-    if earlyBreak == true then
-      break
+  if not MATCH_ENDED then 
+    local earlyBreak = false
+    for i=1, tablelength(data) do
+      if(data[i].PlayerName == playerName) then
+        earlyBreak = true
+        data[i].Deaths = data[i].Deaths + 1
+      end
+      if earlyBreak == true then
+        break
+      end
     end
   end
 end
@@ -220,15 +226,22 @@ local function calculatePoints(coalitionSide)
 end
 
 local function scoreboard()
-  countdownTimer = countdownTimer - scoreboardTimer
   if countdownTimer <= 0 then
     trigger.action.outText("###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG", scoreboardTimer)
     trigger.action.outText('POINTS: BLUE TEAM: ' .. round(calculatePoints(coalition.side.BLUE), 2) .. '  / RED TEAM: ' .. round(calculatePoints(coalition.side.RED), 2) , scoreboardTimer)
     trigger.action.outText("********** MATCH ENDED! **********", scoreboardTimer)
+    MATCH_ENDED = true
   else
-    trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , msgTimer*2)
-    trigger.action.outText('POINTS: BLUE TEAM: ' .. round(calculatePoints(coalition.side.BLUE), 2) .. '  / RED TEAM: ' .. round(calculatePoints(coalition.side.RED), 2), msgTimer*2)
-    trigger.action.outText("TIME REMAINING: " .. round(countdownTimer/60, 1) .. " MINUTES", msgTimer*2)
+    trigger.action.outText('###  TEAM SCORES  ###  Created by =GR= Theodossis for LoG' , scoreboardMessageTimer)
+    trigger.action.outText('POINTS: BLUE TEAM: ' .. round(calculatePoints(coalition.side.BLUE), 2) .. '  / RED TEAM: ' .. round(calculatePoints(coalition.side.RED), 2), scoreboardMessageTimer)
+    local hoursLeft = math.floor(countdownTimer/3600)
+    local minutesLeft = (countdownTimer/60)%60
+    if hoursLeft == 0 then
+      trigger.action.outText("TIME REMAINING: " .. minutesLeft .." MINUTES", scoreboardMessageTimer)
+    else
+      trigger.action.outText("TIME REMAINING: " .. hoursLeft .. " HOURS AND " .. minutesLeft .." MINUTES", scoreboardMessageTimer)
+    end
+    countdownTimer = countdownTimer - scoreboardTimer
   end
 end
 -- -------------------- EVENT MANAGER --------------------
@@ -255,23 +268,25 @@ function EV_MANAGER:onEvent(event)
         if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE or event.initiator:getGroup():getCategory() == Group.Category.HELICOPTER then
           if event.initiator:getPlayerName() ~= nil then
             local deadTarget = event.target
-            local killerName = event.initiator:getPlayerName()
-            if deadTarget:getCategory() == Object.Category.UNIT then
-              if deadTarget:getGroup():getCategory() == Group.Category.AIRPLANE then
-                if deadTarget:hasSensors(Unit.SensorType.RADAR, Unit.RadarType.AS) then
-                  addScore(killerName, airplanePoints)
-                else
-                  addScore(killerName, bomberPoints)
-                end
-              elseif deadTarget:getGroup():getCategory() == Group.Category.HELICOPTER then
-                addScore(killerName, helicopterPoints)
-              elseif deadTarget:getGroup():getCategory() == Group.Category.SHIP then
-                addScore(killerName, shipPoints)
-              elseif deadTarget:getGroup():getCategory() == Group.Category.GROUND then
-                if deadTarget:hasAttribute("SAM elements") then
-                  addScore(killerName, samPoints)
-                else
-                  addScore(killerName, unitPoints)
+            if event.initiator:getCoalition() ~= deadTarget:getCoalition() then
+              local killerName = event.initiator:getPlayerName()
+              if deadTarget:getCategory() == Object.Category.UNIT then
+                if deadTarget:getGroup():getCategory() == Group.Category.AIRPLANE then
+                  if deadTarget:hasSensors(Unit.SensorType.RADAR, Unit.RadarType.AS) then
+                    addScore(killerName, airplanePoints)
+                  else
+                    addScore(killerName, bomberPoints)
+                  end
+                elseif deadTarget:getGroup():getCategory() == Group.Category.HELICOPTER then
+                  addScore(killerName, helicopterPoints)
+                elseif deadTarget:getGroup():getCategory() == Group.Category.SHIP then
+                  addScore(killerName, shipPoints)
+                elseif deadTarget:getGroup():getCategory() == Group.Category.GROUND then
+                  if deadTarget:hasAttribute("SAM elements") then
+                    addScore(killerName, samPoints)
+                  else
+                    addScore(killerName, unitPoints)
+                  end
                 end
               end
             end
