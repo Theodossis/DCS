@@ -1,9 +1,10 @@
 --[[
-    Point System Script - Version: 1.02 - 8/4/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.03 - 8/4/2020 by Theodossis Papadopoulos 
        ]]
 -- Requires MIST script
 -- ----------------------- VARIABLE INIT ------------------------------------
 local STATIC_LIST = {}
+local AIRBASES = {}
 local MATCH_ENDED = false
 local playersSettedUp = {}
 local data = {}
@@ -30,6 +31,10 @@ STATIC_LIST[2] = {
   Points = 200,
 }
 
+AIRBASES[1] = {
+  Name = "Khasab",
+  Points = 600,
+}
 -- ----------------------- MISC METHODS CODE ------------------------------------
 local function tablelength(T)
   local count = 0
@@ -114,6 +119,21 @@ local function addScore(playerName, howMany)
   end
 end
 
+local function removeScore(playerName, howMany)
+  if not MATCH_ENDED then
+    local earlyBreak = false
+    for i=1, tablelength(data) do
+      if data[i].PlayerName == playerName then
+        earlyBreak = true
+        data[i].Score = data[i].Score - howMany
+      end
+      if earlyBreak == true then
+        break
+      end
+    end
+  end
+end
+
 local function addScoreCoalition(coalitionSide, howMany)
   if not MATCH_ENDED then 
     local size = tablelength(data)
@@ -169,6 +189,23 @@ local function targetIsInList(name)
   return false
 end
 
+local function airbaseIsInList(name)
+  for i=1, tablelength(AIRBASES) do
+    if AIRBASES[i].Name == name then
+      return true
+    end
+  end
+  return false
+end
+
+local function airbasePoints(name)
+  for i=1, tablelength(AIRBASES) do
+    if AIRBASES[i].Name == name then
+      return AIRBASES[i].Points
+    end
+  end
+  return 0
+end
 -- -------------------- PRINT MANAGER --------------------
 local function printScore(gpid)
   local earlyBreak = false
@@ -309,6 +346,25 @@ function EV_MANAGER:onEvent(event)
                   addScore(killerName, unitPoints)
                 end
               end
+            else 
+              local killerName = killer:getPlayerName()
+              if deadTarget:getGroup():getCategory() == Group.Category.AIRPLANE then
+                if deadTarget:hasSensors(Unit.SensorType.RADAR, Unit.RadarType.AS) then
+                  removeScore(killerName, airplanePoints)
+                else
+                  removeScore(killerName, bomberPoints)
+                end
+              elseif deadTarget:getGroup():getCategory() == Group.Category.HELICOPTER then
+                removeScore(killerName, helicopterPoints)
+              elseif deadTarget:getGroup():getCategory() == Group.Category.SHIP then
+                removeScore(killerName, shipPoints)
+              elseif deadTarget:getGroup():getCategory() == Group.Category.GROUND then
+                if deadTarget:hasAttribute("SAM elements") then
+                  removeScore(killerName, samPoints)
+                else
+                  removeScore(killerName, unitPoints)
+                end
+              end
             end
           end
         end
@@ -333,6 +389,12 @@ function EV_MANAGER:onEvent(event)
           end
         end
       end
+    end
+  elseif event.id == world.event.S_EVENT_BASE_CAPTURED then
+    local airbase = event.place
+    local airbaseName = airbase:getName()
+    if airbaseIsInList(airbaseName) then
+      addScoreCoalition(airbase:getCoalition(), airbasePoints(airbaseName))
     end
   end
   if event.id == world.event.S_EVENT_CRASH or event.id == world.event.S_EVENT_DEAD then
