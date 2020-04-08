@@ -1,9 +1,13 @@
 --[[
-    Point System Script - Version: 1.01 - 4/4/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.02 - 8/4/2020 by Theodossis Papadopoulos 
        ]]
 -- Requires MIST script
+-- ----------------------- VARIABLE INIT ------------------------------------
 local STATIC_LIST = {}
 local MATCH_ENDED = false
+local playersSettedUp = {}
+local data = {}
+
 -- ----------------------- CONFIGURATION ------------------------------------
 local msgTimer = 10 -- In seconds
 local scoreboardTimer = 120 -- In seconds
@@ -13,12 +17,12 @@ local countdownTimer = 9000 -- In seconds
 local airplanePoints = 50 -- In seconds
 local bomberPoints = 30 -- In seconds
 local helicopterPoints = 30 -- In seconds
-local shipPoints = 100 -- In seconds
+local shipPoints = 150 -- In seconds
 local samPoints = 15 -- In seconds
 local unitPoints = 8 -- In seconds
 
 STATIC_LIST[1] = {
-  Name = {"BT_1A", "BT_1B"},
+  Name = {"BT_1A", "BT_1B", "BT_1C"},
   Points = 400,
 }
 STATIC_LIST[2] = {
@@ -56,8 +60,25 @@ local function round(x, n)
   return x / n
 end
 
-local playersSettedUp = {}
-local data = {}
+local function groupIsDead(inGroupName)
+  local groupHealth = 0
+  local groupDead = false
+  for index, unitData in pairs(Group.getByName(inGroupName):getUnits()) do
+    groupHealth = groupHealth + unitData:getLife()
+  end
+  if groupHealth < 1 then
+    groupDead = true
+  end
+  return groupDead
+end
+
+local function otherCoalition(coalitionSide)
+  if coalitionSide == coalition.side.RED then
+    return coalition.side.BLUE
+  elseif coalitionSide == coalition.side.BLUE then
+    return coalition.side.RED
+  end
+end
 
 -- -------------------- DATA MANAGER --------------------
 local function setup(playerName)
@@ -121,7 +142,7 @@ local function addDeath(playerName)
   end
 end
 
-local function staticPoints(name)
+local function targetPoints(name)
   for i=1, tablelength(STATIC_LIST) do
     if contains(STATIC_LIST[i].Name, name) then
       return STATIC_LIST[i].Points
@@ -130,7 +151,7 @@ local function staticPoints(name)
   return 0
 end
 
-local function staticPointer(name)
+local function targetPointer(name)
   for i=1, tablelength(STATIC_LIST) do  
     if contains(STATIC_LIST[i].Name, name) then
       return i
@@ -139,7 +160,7 @@ local function staticPointer(name)
   return 0
 end
 
-local function staticIsInList(name)
+local function targetIsInList(name)
   for i=1, tablelength(STATIC_LIST) do
     if contains(STATIC_LIST[i].Name, name) then
       return true
@@ -263,30 +284,29 @@ function EV_MANAGER:onEvent(event)
       end
     end
   elseif event.id == world.event.S_EVENT_KILL then
-    if event.initiator ~= nil then
-      if event.initiator:getCategory() == Object.Category.UNIT then
-        if event.initiator:getGroup():getCategory() == Group.Category.AIRPLANE or event.initiator:getGroup():getCategory() == Group.Category.HELICOPTER then
-          if event.initiator:getPlayerName() ~= nil then
-            local deadTarget = event.target
-            if event.initiator:getCoalition() ~= deadTarget:getCoalition() then
-              local killerName = event.initiator:getPlayerName()
-              if deadTarget:getCategory() == Object.Category.UNIT then
-                if deadTarget:getGroup():getCategory() == Group.Category.AIRPLANE then
-                  if deadTarget:hasSensors(Unit.SensorType.RADAR, Unit.RadarType.AS) then
-                    addScore(killerName, airplanePoints)
-                  else
-                    addScore(killerName, bomberPoints)
-                  end
-                elseif deadTarget:getGroup():getCategory() == Group.Category.HELICOPTER then
-                  addScore(killerName, helicopterPoints)
-                elseif deadTarget:getGroup():getCategory() == Group.Category.SHIP then
-                  addScore(killerName, shipPoints)
-                elseif deadTarget:getGroup():getCategory() == Group.Category.GROUND then
-                  if deadTarget:hasAttribute("SAM elements") then
-                    addScore(killerName, samPoints)
-                  else
-                    addScore(killerName, unitPoints)
-                  end
+    local killer = event.initiator
+    local deadTarget = event.target
+    if killer ~= nil then
+      if killer:getCategory() == Object.Category.UNIT and deadTarget:getCategory() == Object.Category.UNIT then
+        if killer:getGroup():getCategory() == Group.Category.AIRPLANE or event.initiator:getGroup():getCategory() == Group.Category.HELICOPTER then
+          if killer:getPlayerName() ~= nil then
+            if killer:getCoalition() ~= deadTarget:getCoalition() then
+              local killerName = killer:getPlayerName()
+              if deadTarget:getGroup():getCategory() == Group.Category.AIRPLANE then
+                if deadTarget:hasSensors(Unit.SensorType.RADAR, Unit.RadarType.AS) then
+                  addScore(killerName, airplanePoints)
+                else
+                  addScore(killerName, bomberPoints)
+                end
+              elseif deadTarget:getGroup():getCategory() == Group.Category.HELICOPTER then
+                addScore(killerName, helicopterPoints)
+              elseif deadTarget:getGroup():getCategory() == Group.Category.SHIP then
+                addScore(killerName, shipPoints)
+              elseif deadTarget:getGroup():getCategory() == Group.Category.GROUND then
+                if deadTarget:hasAttribute("SAM elements") then
+                  addScore(killerName, samPoints)
+                else
+                  addScore(killerName, unitPoints)
                 end
               end
             end
@@ -297,19 +317,19 @@ function EV_MANAGER:onEvent(event)
   elseif event.id == world.event.S_EVENT_DEAD then
     local deadTarget = event.initiator
     if deadTarget ~= nil then
-      if deadTarget:getCategory() == Object.Category.STATIC then
-        local statName = deadTarget:getName()
-        if staticIsInList(statName) then
-          if deadTarget:getCoalition() == coalition.side.BLUE then
-            STATIC_LIST[staticPointer(statName)].Progression[tablelength(STATIC_LIST[staticPointer(statName)].Progression) + 1] = statName
-            if tablelength(STATIC_LIST[staticPointer(statName)].Name) == tablelength(STATIC_LIST[staticPointer(statName)].Progression) then
-              addScoreCoalition(coalition.side.RED, staticPoints(statName))
+      if deadTarget:getCategory() == Object.Category.UNIT or deadTarget:getCategory() == Object.Category.STATIC then
+        local deadName = deadTarget:getName()
+        if deadTarget:getCategory() == Object.Category.UNIT then deadName = deadTarget:getGroup():getName() end 
+        if targetIsInList(deadName) then
+          if deadTarget:getCategory() == Object.Category.UNIT then
+            if groupIsDead(deadName) then
+              STATIC_LIST[targetPointer(deadName)].Progression[tablelength(STATIC_LIST[targetPointer(deadName)].Progression) + 1] = deadName
             end
-          elseif deadTarget:getCoalition() == coalition.side.RED then
-            STATIC_LIST[staticPointer(statName)].Progression[tablelength(STATIC_LIST[staticPointer(statName)].Progression) + 1] = statName
-            if tablelength(STATIC_LIST[staticPointer(statName)].Name) == tablelength(STATIC_LIST[staticPointer(statName)].Progression) then
-              addScoreCoalition(coalition.side.BLUE, staticPoints(statName))
-            end
+          elseif deadTarget:getCategory() == Object.Category.STATIC then
+            STATIC_LIST[targetPointer(deadName)].Progression[tablelength(STATIC_LIST[targetPointer(deadName)].Progression) + 1] = deadName
+          end
+          if tablelength(STATIC_LIST[targetPointer(deadName)].Name) == tablelength(STATIC_LIST[targetPointer(deadName)].Progression) then
+            addScoreCoalition(otherCoalition(deadTarget:getCoalition()), targetPoints(deadName))
           end
         end
       end
