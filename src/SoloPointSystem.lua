@@ -1,5 +1,5 @@
 --[[
-    Point System Script - Version: 1.03 - 8/4/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.04 - 8/4/2020 by Theodossis Papadopoulos 
        ]]
 -- Requires MIST script
 -- ----------------------- VARIABLE INIT ------------------------------------
@@ -15,12 +15,12 @@ local scoreboardTimer = 120 -- In seconds
 local scoreboardMessageTimer = 20 -- In seconds
 local countdownTimer = 9000 -- In seconds
 
-local airplanePoints = 50 -- In seconds
-local bomberPoints = 30 -- In seconds
-local helicopterPoints = 30 -- In seconds
-local shipPoints = 150 -- In seconds
-local samPoints = 15 -- In seconds
-local unitPoints = 8 -- In seconds
+local airplanePoints = 50
+local bomberPoints = 50
+local helicopterPoints = 30
+local shipPoints = 150
+local samPoints = 15
+local unitPoints = 8
 
 STATIC_LIST[1] = {
   Name = {"BT_1A", "BT_1B", "BT_1C"},
