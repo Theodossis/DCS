@@ -1,5 +1,5 @@
 --[[
-    Point System Script - Version: 1.04 - 8/4/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.05 - 8/4/2020 by Theodossis Papadopoulos 
        ]]
 -- Requires MIST script
 -- ----------------------- VARIABLE INIT ------------------------------------
@@ -206,6 +206,28 @@ local function airbasePoints(name)
   end
   return 0
 end
+
+local function airbasePointer(name)
+  for i=1, tablelength(AIRBASES) do
+    if AIRBASES[i].Name == name then
+      return i
+    end
+  end
+  return 0
+end
+
+local function airbaseLast(name)
+  return AIRBASES[airbasePointer(name)].LastCoalition
+end
+
+local function airbaseSetLast(name, coalitionSide)
+  if AIRBASES[airbasePointer(name)].LastCoalition ~= coalitionSide and coalitionSide ~= 0 then
+    AIRBASES[airbasePointer(name)].LastCoalition = coalitionSide
+    return true
+  end
+  return false
+end
+
 -- -------------------- PRINT MANAGER --------------------
 local function printScore(gpid)
   local earlyBreak = false
@@ -394,7 +416,9 @@ function EV_MANAGER:onEvent(event)
     local airbase = event.place
     local airbaseName = airbase:getName()
     if airbaseIsInList(airbaseName) then
-      addScoreCoalition(airbase:getCoalition(), airbasePoints(airbaseName))
+      if airbaseSetLast(airbaseName, airbase:getCoalition()) then
+        addScoreCoalition(airbase:getCoalition(), airbasePoints(airbaseName))
+      end
     end
   end
   if event.id == world.event.S_EVENT_CRASH or event.id == world.event.S_EVENT_DEAD then
@@ -414,6 +438,10 @@ world.addEventHandler(EV_MANAGER)
 
 for i=1, tablelength(STATIC_LIST) do
   STATIC_LIST[i].Progression = {}
+end
+
+for i=1, tablelength(AIRBASES) do
+  AIRBASES[i].LastCoalition = nil
 end
 
 mist.scheduleFunction(scoreboard, nil, timer.getTime() + 10, scoreboardTimer)
