@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.9 - 13/1/2020 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.9B - 13/1/2020 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -7,12 +7,12 @@ local limitations = {} -- Do not touch
 
 -- ---------------------------LIMITATIONS-----------------------------------
 limitations[1] = {
-  WP_NAME = "AIM_120C",
+  WP_NAME = "weapons.missiles.AIM_120C",
   QTY = 24,
   DISPLAY_NAME = "AIM 120C"
 }
 limitations[2] = {
-  WP_NAME = "AIM_120",
+  WP_NAME = "weapons.missiles.AIM_120",
   QTY = 24,
   DISPLAY_NAME = "AIM 120B"
 }
