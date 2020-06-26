@@ -1,7 +1,7 @@
 DCS WEAPON NAMES -> DCS ENGINE NAMES:
   -- AIM 9X -> AIM_9X
-  -- AIM 120C -> AIM_120C
-  -- AIM 120B -> AIM_120
+  -- AIM 120C -> weapons.missiles.AIM_120C
+  -- AIM 120B -> weapons.missiles.AIM_120
   -- SD-10    -> SD-10
   -- R-27ET   -> P_27TE
   -- R-27ER   -> P_27PE
