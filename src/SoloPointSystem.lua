@@ -1,10 +1,11 @@
 --[[
-    Point System Script - Version: 1.05 - 8/4/2020 by Theodossis Papadopoulos 
+    Point System Script - Version: 1.06 - 28/10/2020 by Theodossis Papadopoulos 
        ]]
 -- Requires MIST script
 -- ----------------------- VARIABLE INIT ------------------------------------
 local STATIC_LIST = {}
 local AIRBASES = {}
+local ZONES = {}
 local MATCH_ENDED = false
 local playersSettedUp = {}
 local data = {}
@@ -33,6 +34,11 @@ STATIC_LIST[2] = {
 
 AIRBASES[1] = {
   Name = "Khasab",
+  Points = 0,
+}
+
+ZONES[1] = {
+  Name = "ZONE_1",
   Points = 600,
 }
 -- ----------------------- MISC METHODS CODE ------------------------------------
@@ -228,6 +234,36 @@ local function airbaseSetLast(name, coalitionSide)
   return false
 end
 
+local function zonePoints(name)
+  for i=1, tablelength(ZONES) do
+    if ZONES[i].Name == name then
+      return ZONES[i].Points
+    end
+  end
+  return 0
+end
+
+local function zonePointer(name)
+  for i=1, tablelength(ZONES) do
+    if ZONES[i].Name == name then
+      return i
+    end
+  end
+  return 0
+end
+
+local function zoneSetLast(name, coalitionSide)
+  if ZONES[zonePointer(name)].LastCoalition ~= coalitionSide and coalitionSide ~= 0 then
+    ZONES[zonePointer(name)].LastCoalition = coalitionSide
+    return true
+  end
+  return false
+end
+
+local function isInZone(vec3, zone)
+  return ((vec3.x - zone.point.x)^2 + (vec3.z - zone.point.z)^2)^0.5 < zone.radius
+end
+
 -- -------------------- PRINT MANAGER --------------------
 local function printScore(gpid)
   local earlyBreak = false
@@ -322,6 +358,43 @@ local function scoreboard()
       trigger.action.outText("TIME REMAINING: " .. hoursLeft .. " HOURS AND " .. minutesLeft .." MINUTES", scoreboardMessageTimer)
     end
     countdownTimer = countdownTimer - scoreboardTimer
+  end
+end
+
+local function zoneChecker()
+  for k=1, tablelength(ZONES) do
+    local zoneName = ZONES[k].Name
+    local blueInZone = 0
+    local redInZone = 0
+    for i, gp in pairs(coalition.getGroups(coalition.side.BLUE)) do
+      if gp:getCategory() == Group.Category.GROUND then
+        for j, un in pairs(gp:getUnits()) do
+          if isInZone(un:getPosition().p, trigger.misc.getZone(zoneName)) then
+            blueInZone = blueInZone + 1
+          end
+        end
+      end
+    end
+    for i, gp in pairs(coalition.getGroups(coalition.side.RED)) do
+      if gp:getCategory() == Group.Category.GROUND then
+        for j, un in pairs(gp:getUnits()) do
+          if isInZone(un:getPosition().p, trigger.misc.getZone(zoneName)) then
+            redInZone = redInZone + 1
+          end
+        end
+      end
+    end
+    trigger.action.outText("blue" .. blueInZone, 5)
+    trigger.action.outText("red" .. redInZone, 5)
+    if blueInZone > 0 and redInZone == 0 then -- ZONE BELONGS TO BLUE NOW
+      if zoneSetLast(zoneName, coalition.side.BLUE) then
+        addScoreCoalition(coalition.side.BLUE, zonePoints(zoneName))
+      end
+    elseif blueInZone == 0 and redInZone > 0 then -- ZONE BELONGS TO RED NOW
+      if zoneSetLast(zoneName, coalition.side.RED) then
+        addScoreCoalition(coalition.side.RED, zonePoints(zoneName))
+      end
+    end
   end
 end
 -- -------------------- EVENT MANAGER --------------------
@@ -444,4 +517,9 @@ for i=1, tablelength(AIRBASES) do
   AIRBASES[i].LastCoalition = nil
 end
 
+for i=1, tablelength(ZONES) do
+  ZONES[i].LastCoalition = nil
+end
+
 mist.scheduleFunction(scoreboard, nil, timer.getTime() + 10, scoreboardTimer)
+mist.scheduleFunction(zoneChecker, nil, timer.getTime() + 10, 5)
