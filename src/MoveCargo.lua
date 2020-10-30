@@ -1,12 +1,12 @@
 --[[
-    MoveCargo Script - Version: 1.1 - 21/2/2020 by Theodossis Papadopoulos
+    MoveCargo Script - Version: 1.2 - 28/10/2020 by Theodossis Papadopoulos
     -- Requires MIST
     -- With love for =GR= Spanker
-    -- DON'T FORGET TO CREATE A SPAWN_ZONE
        ]]
 
 local CARGO_SCRIPT = {}
 -- ---------------------------CONFIGURATION---------------------------
+local SPAWN_ZONES = {"SPAWN_ZONE_1", "SPAWN_ZONE_2"}
 local NOT_IN_ZONE_MESSAGE = "You must be inside the spawn zone to spawn a crate!"
 local CRATE_MASS = 300
 local SHAPE_NAME = "ab-212_cargo" -- MIKRO DYXTIOTO
@@ -129,6 +129,15 @@ local function getFront(position, offset)
   return { x = point.x + xOffset, z = point.z + yOffset, y = point.y }
 end
 
+local function isInASpawnZone(vec3)
+  for i=1, tablelength(SPAWN_ZONES) do
+    if isInZone(vec3, trigger.misc.getZone(SPAWN_ZONES[i])) then
+      return true
+    end
+  end
+  return false
+end
+
 local function spawnCrate(gpid)
   local earlyBreak = false
   local blueUnits = mist.utils.deepCopy(coalition.getPlayers(coalition.side.BLUE))
@@ -137,7 +146,7 @@ local function spawnCrate(gpid)
   for j=1, tablelength(allUnits) do
     local us = allUnits[j]
     if us:getGroup():getID() == gpid then -- Found him/them for two seat
-      if isInZone(us:getPosition().p, trigger.misc.getZone("SPAWN_ZONE")) then 
+      if isInASpawnZone(us:getPosition().p) then 
         earlyBreak = true
         local position = us:getPosition()
         local front = getFront(position, 20)
