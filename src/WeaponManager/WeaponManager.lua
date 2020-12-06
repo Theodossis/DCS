@@ -1,5 +1,5 @@
 --[[
-    Weapon Manager Script - Version: 1.9B - 13/1/2020 by Theodossis Papadopoulos
+    Weapon Manager Script - Version: 1.10 - 6/12/2020 by Theodossis Papadopoulos
     -- Requires MIST
        ]]
 local msgTimer = 15
@@ -17,7 +17,7 @@ limitations[2] = {
   DISPLAY_NAME = "AIM 120B"
 }
 limitations[3] = {
-  WP_NAME = "SD-10",
+  WP_NAME = "weapons.missiles.SD-10",
   QTY = 24,
   DISPLAY_NAME = "SD-10"
 }
@@ -236,9 +236,9 @@ function EV_MANAGER:onEvent(event)
         missionCommands.addCommandForGroup(gpid, "Show weapons left", nil, printHowManyLeft, gpid)
         missionCommands.addCommandForGroup(gpid, "Validate Loadout", nil, validateLoadout, gpid)
         --FOR WEAPON DEBUGGING
-        --for i, ammo in pairs(event.initiator:getAmmo()) do
-        --  trigger.action.outText(ammo.desc.typeName, msgTimer)
-        --end
+        for i, ammo in pairs(event.initiator:getAmmo()) do
+          trigger.action.outText(ammo.desc.typeName, msgTimer)
+        end
       end
     end
   elseif event.id == world.event.S_EVENT_TAKEOFF then
