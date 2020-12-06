@@ -236,9 +236,9 @@ function EV_MANAGER:onEvent(event)
         missionCommands.addCommandForGroup(gpid, "Show weapons left", nil, printHowManyLeft, gpid)
         missionCommands.addCommandForGroup(gpid, "Validate Loadout", nil, validateLoadout, gpid)
         --FOR WEAPON DEBUGGING
-        for i, ammo in pairs(event.initiator:getAmmo()) do
-          trigger.action.outText(ammo.desc.typeName, msgTimer)
-        end
+        --for i, ammo in pairs(event.initiator:getAmmo()) do
+        --  trigger.action.outText(ammo.desc.typeName, msgTimer)
+        --end
       end
     end
   elseif event.id == world.event.S_EVENT_TAKEOFF then
