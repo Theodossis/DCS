@@ -1,5 +1,5 @@
 --[[
-    Template PvP Mission Script - Version: 1.15 - 12/1/2020 by Theodossis Papadopoulos 
+    Template PvP Mission Script - Version: 1.16 - 13/4/2022 by Theodossis Papadopoulos 
        ]]
 local BLUE_OPERATIONS = _G["BLUE_OPERATIONS"]
 local GROUPS_BLUE = _G["GROUPS_BLUE"]
@@ -480,8 +480,8 @@ world.addEventHandler(GROUP_DEAD)
 
 POINT_SYSTEM = {}
 function POINT_SYSTEM:onEvent(event)
-  local who = event.initiator
-  if event.id == world.event.S_EVENT_DEAD then
+  if event.id == world.event.S_EVENT_UNIT_LOST then
+    local who = event.initiator
     if who:getCategory() == Object.Category.UNIT then
       if who:getGroup():getCategory() == Group.Category.AIRPLANE then
         if who:getCoalition() == coalition.side.BLUE then
