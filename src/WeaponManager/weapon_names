@@ -12,6 +12,8 @@ DCS WEAPON NAMES -> DCS ENGINE NAMES:
   
   -- AGM-62 -> weapons.missiles.AGM_62
   -- AGM-84 -> weapons.missiles.AGM_84D
+  -- AGM-84H -> weapons.missiles.AGM_84H
+  -- AGM-84E -> weapons.missiles.AGM_84E
   -- AGM-88 -> weapons.missiles.AGM_88
   -- AGM-154A -> weapons.missiles.AGM_154A
   -- AGM-154C -> weapons.missiles.AGM_154
